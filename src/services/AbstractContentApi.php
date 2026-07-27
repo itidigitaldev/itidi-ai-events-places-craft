@@ -1,0 +1,91 @@
+<?php
+
+namespace iti\craftitiplugin\services;
+
+use Craft;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
+use iti\craftitiplugin\errors\ContentApiException;
+use iti\craftitiplugin\errors\ContentNotFoundException;
+use yii\base\Component;
+
+abstract class AbstractContentApi extends Component
+{
+    private const API_BASE = 'https://api.imgoingcalendar.com/api/v2.0/';
+    private const TIMEOUT = 30;
+
+    public ?ClientInterface $httpClient = null;
+
+    abstract protected function typeSegment(): string;
+
+    abstract protected function notFoundStatusCode(): int;
+
+    abstract protected function ceilingLimit(): int;
+
+    abstract protected function mapListingFilters(array $filters, int $resolvedLimit, string $listingBaseUrl, string $detailBaseUrl, int $page): array;
+
+    public function fetchListing(string $hubname, string $resolvedApiKey, array $filters, string $listingBaseUrl, string $detailBaseUrl, int $page = 1): array
+    {
+        $limit = $this->resolveLimit($filters['limit'] ?? null);
+        $queryArgs = $this->mapListingFilters($filters, $limit, $listingBaseUrl, $detailBaseUrl, $page);
+
+        $data = $this->request($hubname, $resolvedApiKey, $this->typeSegment() . '/ssr-listing', $queryArgs);
+
+        if (empty($data['html'])) {
+            throw new ContentApiException('No listing content returned.');
+        }
+
+        return $data;
+    }
+
+    public function fetchDetail(string $hubname, string $resolvedApiKey, string $id): array
+    {
+        $queryArgs = ['id' => $id, 'format' => 'fragment', 'assetMode' => 'external'];
+
+        try {
+            $data = $this->request($hubname, $resolvedApiKey, $this->typeSegment() . '/ssr-detail', $queryArgs);
+        } catch (ContentApiException) {
+            throw new ContentNotFoundException($this->notFoundStatusCode());
+        }
+
+        if (empty($data['html'])) {
+            throw new ContentNotFoundException($this->notFoundStatusCode());
+        }
+
+        return $data;
+    }
+
+    private function resolveLimit(?int $requested): int
+    {
+        $limit = $requested && $requested > 0 ? $requested : $this->ceilingLimit();
+        return min($limit, $this->ceilingLimit());
+    }
+
+    private function request(string $hubname, string $resolvedApiKey, string $route, array $queryArgs): array
+    {
+        $url = self::API_BASE . rawurlencode($hubname) . '/' . $route;
+        $client = $this->httpClient ?? Craft::createGuzzleClient(['timeout' => self::TIMEOUT]);
+
+        try {
+            $response = $client->get($url, [
+                'query' => array_merge($queryArgs, ['key' => $resolvedApiKey]),
+                'headers' => ['Accept' => 'application/json'],
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException $e) {
+            throw new ContentApiException("Couldn't reach ITI Digital. Check your connection and try again.", 0, $e);
+        }
+
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+            throw new ContentApiException('ITI Digital returned an error response.');
+        }
+
+        $data = json_decode((string) $response->getBody(), true);
+
+        if (!is_array($data)) {
+            throw new ContentApiException('ITI Digital returned a malformed response.');
+        }
+
+        return $data;
+    }
+}

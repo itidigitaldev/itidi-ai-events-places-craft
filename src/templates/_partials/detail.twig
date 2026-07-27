@@ -1,0 +1,11 @@
+<div id="{{ sourceId }}">{{ sanitizedHtml|raw }}</div>
+<div id="{{ shadowId }}" style="display:none;" data-source-id="{{ sourceId }}"></div>
+<script>
+  window.{{ globalName }} = window.{{ globalName }} || { instances: [], cssAssets: [] };
+  window.{{ globalName }}.instances.push({
+    sourceId: {{ sourceId|json_encode|raw }},
+    shadowId: {{ shadowId|json_encode|raw }},
+    bootstrap: {{ bootstrap|json_encode|raw }}
+  });
+  window.{{ globalName }}.cssAssets = {{ cssAssets|json_encode|raw }};
+</script>

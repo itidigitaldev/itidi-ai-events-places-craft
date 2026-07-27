@@ -1,0 +1,98 @@
+{% requireAdmin %}
+
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Craft ITI Plugin" %}
+
+{% set crumbs = [
+    { label: "Settings"|t('app'), url: url('settings') },
+    { label: "Plugins"|t('app'), url: url('settings/plugins') },
+] %}
+
+{% block content %}
+    {% if not settings.isConnected %}
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('craft-iti-plugin/settings/connect') }}
+            {{ redirectInput('settings/plugins/craft-iti-plugin') }}
+
+            {{ forms.textField({
+                label: 'Hubname',
+                id: 'hubname',
+                name: 'hubname',
+                value: settings.hubname,
+                errors: settings.getErrors('hubname'),
+                required: true,
+            }) }}
+
+            {{ forms.textField({
+                label: 'API Key',
+                instructions: 'Your ITI Digital API key.',
+                id: 'apiKey',
+                name: 'apiKey',
+                value: settings.apiKey,
+                errors: settings.getErrors('apiKey'),
+                required: true,
+            }) }}
+
+            <div class="buttons">
+                <button type="submit" class="btn submit">{{ 'Connect' }}</button>
+            </div>
+        </form>
+    {% else %}
+        {{ forms.textField({
+            label: 'Hubname',
+            value: settings.hubname,
+            disabled: true,
+        }) }}
+
+        {{ forms.textField({
+            label: 'API Key',
+            value: '••••••••••••',
+            disabled: true,
+        }) }}
+
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('craft-iti-plugin/settings/save') }}
+            {{ redirectInput('settings/plugins/craft-iti-plugin') }}
+
+            {% if settings.moduleStatus['events'] %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Events',
+                    id: 'enableEvents',
+                    name: 'enableEvents',
+                    on: settings.enableEvents,
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Events: not available on this hub.' }}</p>
+            {% endif %}
+
+            {% if settings.moduleStatus['places'] %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Places',
+                    id: 'enablePlaces',
+                    name: 'enablePlaces',
+                    on: settings.enablePlaces,
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Places: not available on this hub.' }}</p>
+            {% endif %}
+
+            <div class="buttons">
+                <button type="submit" class="btn submit">{{ 'Save' }}</button>
+            </div>
+        </form>
+
+        <form method="post" accept-charset="UTF-8" onsubmit="return confirm('Disconnect from ITI Digital?');">
+            {{ csrfInput() }}
+            {{ actionInput('craft-iti-plugin/settings/disconnect') }}
+            {{ redirectInput('settings/plugins/craft-iti-plugin') }}
+
+            <div class="buttons">
+                <button type="submit" class="btn">{{ 'Disconnect' }}</button>
+            </div>
+        </form>
+    {% endif %}
+{% endblock %}

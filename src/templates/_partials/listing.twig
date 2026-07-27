@@ -1,0 +1,9 @@
+<div id="{{ containerId }}">{{ sanitizedHtml|raw }}</div>
+<script>
+  window.itidiAiListingInit = window.itidiAiListingInit || { instances: [] };
+  window.itidiAiListingInit.instances.push({
+    containerId: {{ containerId|json_encode|raw }},
+    initMethod: {{ initMethod|json_encode|raw }},
+    bootstrap: {{ bootstrap|json_encode|raw }}
+  });
+</script>

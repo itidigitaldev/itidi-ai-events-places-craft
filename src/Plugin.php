@@ -3,9 +3,16 @@
 namespace iti\craftitiplugin;
 
 use Craft;
+use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
-use craft\events\TemplateEvent;
+use craft\events\RegisterTemplateRootsEvent;
+use craft\web\twig\variables\CraftVariable;
 use craft\web\View;
+use iti\craftitiplugin\models\Settings;
+use iti\craftitiplugin\services\EventsApi;
+use iti\craftitiplugin\services\ModuleStatusApi;
+use iti\craftitiplugin\services\PlacesApi;
+use iti\craftitiplugin\variables\CraftItiVariable;
 use yii\base\Event;
 
 /**
@@ -15,28 +22,55 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
-    private const MARKER_PATTERN = '/<div\s+id=(["\'])(craftitiplugin|craft-iti-plugin|craft_iti_plugin)\1\s*>\s*<\/div>/i';
-
-    private const PLACEHOLDER_HTML = '<div class="craft-iti-plugin-placeholder" style="border:2px dashed #2563eb;background:#eff6ff;padding:1.5rem;border-radius:0.5rem;text-align:center;color:#1e3a8a;"><strong>🔌 Craft ITI Plugin</strong><br>This section is rendered by the Craft ITI Plugin (placeholder — real content coming later).</div>';
-
     public function init(): void
     {
+        $this->hasCpSettings = true;
+
         parent::init();
 
-        Event::on(
-            View::class,
-            View::EVENT_AFTER_RENDER_PAGE_TEMPLATE,
-            function(TemplateEvent $event) {
-                if (!Craft::$app->getRequest()->getIsSiteRequest()) {
-                    return;
-                }
+        $this->setComponents([
+            'moduleStatusApi' => ModuleStatusApi::class,
+            'eventsApi' => EventsApi::class,
+            'placesApi' => PlacesApi::class,
+        ]);
 
-                $event->output = preg_replace(
-                    self::MARKER_PATTERN,
-                    '<div id="$2">' . self::PLACEHOLDER_HTML . '</div>',
-                    $event->output
-                ) ?? $event->output;
+        Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            function(Event $event) {
+                /** @var CraftVariable $variable */
+                $variable = $event->sender;
+                $variable->set('craftIti', CraftItiVariable::class);
             }
         );
+
+        // craft\base\Plugin only registers src/templates/ as a CP template
+        // root. CraftItiVariable renders its partials from site requests, so
+        // the same directory needs to be a site root too.
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
+            function(RegisterTemplateRootsEvent $event) {
+                $baseDir = $this->getBasePath() . DIRECTORY_SEPARATOR . 'templates';
+                if (is_dir($baseDir)) {
+                    $event->roots[$this->id] = $baseDir;
+                }
+            }
+        );
+    }
+
+    protected function createSettingsModel(): ?Model
+    {
+        return new Settings();
+    }
+
+    public function getSettingsResponse(): mixed
+    {
+        /** @var \craft\web\Controller $controller */
+        $controller = Craft::$app->controller;
+
+        return $controller->renderTemplate('craft-iti-plugin/settings', [
+            'settings' => $this->getSettings(),
+        ]);
     }
 }
