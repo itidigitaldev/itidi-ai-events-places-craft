@@ -7,3 +7,7 @@
     bootstrap: {{ bootstrap|json_encode|raw }}
   });
 </script>
+
+{% if structuredData is not empty %}
+    <script type="application/ld+json">{{ structuredData|json_encode|raw }}</script>
+{% endif %}

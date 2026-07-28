@@ -1,7 +1,31 @@
 {% extends "_layout" %}
 
+{% set result = craft.craftIti.eventDetailWithSeo(id) %}
+{% set seomaticActive = craft.app.plugins.isPluginEnabled('seomatic') %}
+
+{% if result.seo is not null %}
+    {% if seomaticActive %}
+        {% do seomatic.meta.setAttributes({
+            seoTitle: result.seo.title,
+            seoDescription: result.seo.description,
+            canonicalUrl: result.seo.canonicalUrl,
+        }) %}
+    {% else %}
+        {% do craft.app.view.registerLinkTag({rel: 'canonical', href: result.seo.canonicalUrl}) %}
+    {% endif %}
+
+    {% if result.seo.structuredData is not empty %}
+        {% do craft.app.view.registerScript(result.seo.structuredData|json_encode|raw, 1, {type: 'application/ld+json'}) %}
+    {% endif %}
+
+    {% do craft.app.view.registerMetaTag({property: 'og:type', content: 'event'}) %}
+{% endif %}
+
+{% block title %}{% if result.seo is not null and result.seo.title %}{{ result.seo.title }}{% else %}{{ parent() }}{% endif %}{% endblock %}
+{% block metaDescription %}{% if result.seo is not null and result.seo.description %}{{ result.seo.description }}{% else %}{{ parent() }}{% endif %}{% endblock %}
+
 {% block content %}
     <div class="container" style="padding: 3rem 0;">
-        {{ craft.craftIti.eventDetail(id) }}
+        {{ result.html }}
     </div>
 {% endblock %}

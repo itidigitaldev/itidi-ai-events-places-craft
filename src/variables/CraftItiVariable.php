@@ -9,6 +9,7 @@ use HTMLPurifier_Config;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
 use iti\craftitiplugin\Plugin;
+use iti\craftitiplugin\seo\SeoDataFactory;
 use iti\craftitiplugin\web\assets\eventshadowdom\EventShadowDomAsset;
 use iti\craftitiplugin\web\assets\listinginit\ListingInitAsset;
 use iti\craftitiplugin\web\assets\placeshadowdom\PlaceShadowDomAsset;
@@ -51,24 +52,38 @@ class CraftItiVariable
 
     public function eventDetail(string $id): Markup
     {
-        return $this->markup($this->renderDetail('events', $id));
+        return $this->markup($this->renderDetail('events', $id)['html']);
     }
 
     public function placeDetail(string $id): Markup
     {
-        return $this->markup($this->renderDetail('places', $id));
+        return $this->markup($this->renderDetail('places', $id)['html']);
     }
 
-    private function renderDetail(string $type, string $id): string
+    public function eventDetailWithSeo(string $id): array
+    {
+        $result = $this->renderDetail('events', $id);
+
+        return ['html' => $this->markup($result['html']), 'seo' => $result['seo'], 'contentType' => 'events'];
+    }
+
+    public function placeDetailWithSeo(string $id): array
+    {
+        $result = $this->renderDetail('places', $id);
+
+        return ['html' => $this->markup($result['html']), 'seo' => $result['seo'], 'contentType' => 'places'];
+    }
+
+    private function renderDetail(string $type, string $id): array
     {
         $settings = Plugin::getInstance()->getSettings();
 
         if ($type === 'events' && !$settings->enableEvents) {
-            return 'Events are disabled.';
+            return ['html' => 'Events are disabled.', 'seo' => null];
         }
 
         if ($type === 'places' && !$settings->enablePlaces) {
-            return 'Places are disabled.';
+            return ['html' => 'Places are disabled.', 'seo' => null];
         }
 
         $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
@@ -78,9 +93,11 @@ class CraftItiVariable
         } catch (ContentNotFoundException $e) {
             Craft::$app->getResponse()->setStatusCode($e->statusCode);
 
-            return Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail-not-found', [
+            $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail-not-found', [
                 'message' => $e->getMessage(),
             ]);
+
+            return ['html' => $html, 'seo' => null];
         }
 
         $this->registerCssFiles($response['assets']['css'] ?? []);
@@ -92,7 +109,7 @@ class CraftItiVariable
         $prefix = 'craft-iti-' . $type;
         $uuid = StringHelper::UUID();
 
-        return Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail', [
+        $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail', [
             'sourceId' => $prefix . '-source-' . $uuid,
             'shadowId' => $prefix . '-shadow-' . $uuid,
             'sanitizedHtml' => $this->sanitizeSsrHtml($response['html']),
@@ -100,6 +117,10 @@ class CraftItiVariable
             'bootstrap' => $response['bootstrap'] ?? [],
             'cssAssets' => $response['assets']['css'] ?? [],
         ]);
+
+        $seoData = SeoDataFactory::fromDetailResponse($response['seo'] ?? [], Craft::$app->getRequest()->getAbsoluteUrl());
+
+        return ['html' => $html, 'seo' => $seoData];
     }
 
     private function renderListing(string $type, array $filters): string
@@ -147,6 +168,7 @@ class CraftItiVariable
             'sanitizedHtml' => $this->sanitizeSsrHtml($response['html']),
             'initMethod' => $type === 'events' ? 'initEventListing' : 'initPlaceListing',
             'bootstrap' => $response['bootstrap'] ?? [],
+            'structuredData' => $response['seo']['structuredData'] ?? [],
         ]);
     }
 
