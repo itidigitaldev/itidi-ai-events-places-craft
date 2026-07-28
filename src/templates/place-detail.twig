@@ -5,11 +5,10 @@
 
 {% if result.seo is not null %}
     {% if seomaticActive %}
-        {% do seomatic.meta.setAttributes({
-            seoTitle: result.seo.title,
-            seoDescription: result.seo.description,
-            canonicalUrl: result.seo.canonicalUrl,
-        }) %}
+        {% set seomaticAttrs = {canonicalUrl: result.seo.canonicalUrl} %}
+        {% if result.seo.title %}{% set seomaticAttrs = seomaticAttrs|merge({seoTitle: result.seo.title}) %}{% endif %}
+        {% if result.seo.description %}{% set seomaticAttrs = seomaticAttrs|merge({seoDescription: result.seo.description}) %}{% endif %}
+        {% do seomatic.meta.setAttributes(seomaticAttrs) %}
     {% else %}
         {% do craft.app.view.registerLinkTag({rel: 'canonical', href: result.seo.canonicalUrl}) %}
     {% endif %}

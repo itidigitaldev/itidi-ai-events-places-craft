@@ -157,4 +157,71 @@ class SeoDataFactoryTest extends TestCase
         $this->assertSame('Downtown Hotel', $seoData->structuredData[1]['name']);
         $this->assertSame('$$', $seoData->structuredData[1]['priceRange']);
     }
+
+    public function testMalformedStructuredDataPassesThroughUnchanged(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse([
+            'structuredData' => [
+                'not-an-array-string',
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'BreadcrumbList',
+                    'itemListElement' => [
+                        [
+                            '@type' => 'ListItem',
+                            'position' => 1,
+                            'item' => 'https://savannahvirtualvisitorcenter.com/page1/',
+                        ],
+                        'bare-string-item',
+                    ],
+                ],
+            ],
+        ], 'https://mysite.com/page/123');
+
+        // Non-array entry at root should pass through unchanged
+        $this->assertSame('not-an-array-string', $seoData->structuredData[0]);
+
+        // BreadcrumbList array entry should still be processed
+        $this->assertIsArray($seoData->structuredData[1]);
+
+        // Array item in itemListElement should be rewritten
+        $this->assertSame('https://mysite.com/page1/', $seoData->structuredData[1]['itemListElement'][0]['item']);
+
+        // Non-array item in itemListElement should pass through unchanged
+        $this->assertSame('bare-string-item', $seoData->structuredData[1]['itemListElement'][1]);
+    }
+
+    public function testNonDefaultPortIsPreservedInRewrittenUrls(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse([
+            'structuredData' => [
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'BreadcrumbList',
+                    'itemListElement' => [
+                        [
+                            '@type' => 'ListItem',
+                            'position' => 1,
+                            'item' => 'https://savannahvirtualvisitorcenter.com/events/',
+                        ],
+                    ],
+                ],
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Event',
+                    'name' => 'Dev Event',
+                    'url' => 'https://savannahvirtualvisitorcenter.com/events/e/dev-event-789',
+                ],
+            ],
+        ], 'http://mysite.local:8080/events/e/dev-event-789');
+
+        // Port should be preserved in rewritten BreadcrumbList item
+        $this->assertSame('http://mysite.local:8080/events/', $seoData->structuredData[0]['itemListElement'][0]['item']);
+
+        // Port should be preserved in rewritten Event url
+        $this->assertSame('http://mysite.local:8080/events/e/dev-event-789', $seoData->structuredData[1]['url']);
+
+        // Canonical URL should also have port (for consistency)
+        $this->assertSame('http://mysite.local:8080/events/e/dev-event-789', $seoData->canonicalUrl);
+    }
 }

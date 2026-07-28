@@ -20,9 +20,12 @@ final class SeoDataFactory
             return [];
         }
 
-        $targetOrigin = parse_url($currentUrl, PHP_URL_SCHEME) . '://' . parse_url($currentUrl, PHP_URL_HOST);
+        $targetOrigin = self::buildTargetOrigin($currentUrl);
 
-        return array_map(fn (array $schemaObject) => self::rewriteSchemaObject($schemaObject, $targetOrigin), $structuredData);
+        return array_map(
+            fn ($schemaObject) => is_array($schemaObject) ? self::rewriteSchemaObject($schemaObject, $targetOrigin) : $schemaObject,
+            $structuredData
+        );
     }
 
     private static function rewriteSchemaObject(array $object, string $targetOrigin): array
@@ -33,19 +36,44 @@ final class SeoDataFactory
         }
 
         if (($object['@type'] ?? null) === 'BreadcrumbList' && isset($object['itemListElement']) && is_array($object['itemListElement'])) {
-            $object['itemListElement'] = array_map(function (array $item) use ($targetOrigin) {
-                if (isset($item['item']) && is_string($item['item'])) {
-                    $item['item'] = self::replaceHost($item['item'], $targetOrigin);
-                }
-                return $item;
-            }, $object['itemListElement']);
+            $object['itemListElement'] = array_map(
+                fn ($item) => is_array($item) ? self::rewriteBreadcrumbItem($item, $targetOrigin) : $item,
+                $object['itemListElement']
+            );
         }
 
         return $object;
     }
 
+    private static function rewriteBreadcrumbItem(array $item, string $targetOrigin): array
+    {
+        if (isset($item['item']) && is_string($item['item'])) {
+            $item['item'] = self::replaceHost($item['item'], $targetOrigin);
+        }
+        return $item;
+    }
+
+    private static function buildTargetOrigin(string $currentUrl): string
+    {
+        $port = parse_url($currentUrl, PHP_URL_PORT);
+
+        return parse_url($currentUrl, PHP_URL_SCHEME) . '://' . parse_url($currentUrl, PHP_URL_HOST) . ($port !== null ? ':' . $port : '');
+    }
+
     private static function replaceHost(string $url, string $targetOrigin): string
     {
-        return preg_replace('#^https?://[^/]+#', $targetOrigin, $url);
+        $result = $targetOrigin . (parse_url($url, PHP_URL_PATH) ?? '');
+
+        $query = parse_url($url, PHP_URL_QUERY);
+        if ($query !== null) {
+            $result .= '?' . $query;
+        }
+
+        $fragment = parse_url($url, PHP_URL_FRAGMENT);
+        if ($fragment !== null) {
+            $result .= '#' . $fragment;
+        }
+
+        return $result;
     }
 }
