@@ -12,11 +12,17 @@ class Settings extends Model
     public array $moduleStatus = ['events' => false, 'places' => false];
     public bool $enableEvents = false;
     public bool $enablePlaces = false;
+    public bool $enableLegacyRedirects = false;
+    public string $eventsListingUrl = '';
+    public string $placesListingUrl = '';
+    public string $legacyEventIdParam = 'event_id';
+    public string $legacyPlaceIdParam = 'place_id';
 
     protected function defineRules(): array
     {
         return [
-            [['hubname', 'apiKey'], 'trim'],
+            [['hubname', 'apiKey', 'eventsListingUrl', 'placesListingUrl', 'legacyEventIdParam', 'legacyPlaceIdParam'], 'trim'],
+            [['eventsListingUrl', 'placesListingUrl'], 'required', 'when' => fn(Settings $model) => $model->enableLegacyRedirects],
         ];
     }
 }

@@ -227,4 +227,30 @@ class AbstractContentApiTest extends TestCase
         $this->assertSame('fragment', $query['format']);
         $this->assertSame('external', $query['assetMode']);
     }
+
+    public function testFetchDetailStripsSlugPrefixFromId(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>detail</p>'])),
+        ], $history);
+
+        $api->fetchDetail('demo-hub', 'real-key', 'my-event-name-6a251e6360e8033e32950389');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('6a251e6360e8033e32950389', $query['id']);
+    }
+
+    public function testFetchDetailLeavesABareIdUnchanged(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>detail</p>'])),
+        ], $history);
+
+        $api->fetchDetail('demo-hub', 'real-key', '6a251e6360e8033e32950389');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('6a251e6360e8033e32950389', $query['id']);
+    }
 }

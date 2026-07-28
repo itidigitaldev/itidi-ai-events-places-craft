@@ -5,15 +5,21 @@ namespace iti\craftitiplugin;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
+use craft\events\ExceptionEvent;
 use craft\events\RegisterTemplateRootsEvent;
+use craft\events\RegisterUrlRulesEvent;
+use craft\web\ErrorHandler;
 use craft\web\twig\variables\CraftVariable;
+use craft\web\UrlManager;
 use craft\web\View;
+use iti\craftitiplugin\helpers\LegacyRedirectResolver;
 use iti\craftitiplugin\models\Settings;
 use iti\craftitiplugin\services\EventsApi;
 use iti\craftitiplugin\services\ModuleStatusApi;
 use iti\craftitiplugin\services\PlacesApi;
 use iti\craftitiplugin\variables\CraftItiVariable;
 use yii\base\Event;
+use yii\web\HttpException;
 
 /**
  * Craft ITI Plugin
@@ -55,6 +61,52 @@ class Plugin extends BasePlugin
                 if (is_dir($baseDir)) {
                     $event->roots[$this->id] = $baseDir;
                 }
+            }
+        );
+
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
+            function(RegisterUrlRulesEvent $event) {
+                $event->rules['<prefix:.*>/e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
+                $event->rules['<prefix:.*>/p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
+                $event->rules['e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
+                $event->rules['p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
+            }
+        );
+
+        Event::on(
+            ErrorHandler::class,
+            ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION,
+            function(ExceptionEvent $event) {
+                $exception = $event->exception;
+                if (!$exception instanceof HttpException || $exception->statusCode !== 404) {
+                    return;
+                }
+
+                $settings = $this->getSettings();
+                $query = Craft::$app->getRequest()->getQueryParams();
+
+                $url = LegacyRedirectResolver::resolve(
+                    $settings->enableLegacyRedirects,
+                    $settings->eventsListingUrl,
+                    $settings->legacyEventIdParam,
+                    $query,
+                    suffix: 'e',
+                ) ?? LegacyRedirectResolver::resolve(
+                    $settings->enableLegacyRedirects,
+                    $settings->placesListingUrl,
+                    $settings->legacyPlaceIdParam,
+                    $query,
+                    suffix: 'p',
+                );
+
+                if ($url === null) {
+                    return;
+                }
+
+                Craft::$app->getResponse()->redirect($url, 301);
+                Craft::$app->end();
             }
         );
     }
