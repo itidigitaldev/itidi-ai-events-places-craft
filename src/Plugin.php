@@ -68,6 +68,11 @@ class Plugin extends BasePlugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function(RegisterUrlRulesEvent $event) {
+                // The wildcard-prefix pair matches a listing nested anywhere
+                // ("events/e/123"). The bare pair matches a listing at the site
+                // root ("e/123") - the wildcard pair can't, since it requires a
+                // literal "/" before "e/"/"p/", which a root-level path has no
+                // room for. Both pairs are needed; don't collapse back to two.
                 $event->rules['<prefix:.*>/e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
                 $event->rules['<prefix:.*>/p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
                 $event->rules['e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
@@ -75,40 +80,44 @@ class Plugin extends BasePlugin
             }
         );
 
-        Event::on(
-            ErrorHandler::class,
-            ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION,
-            function(ExceptionEvent $event) {
-                $exception = $event->exception;
-                if (!$exception instanceof HttpException || $exception->statusCode !== 404) {
-                    return;
-                }
+        Event::on(ErrorHandler::class, ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION, [$this, 'handleLegacyRedirect']);
+    }
 
-                $settings = $this->getSettings();
-                $query = Craft::$app->getRequest()->getQueryParams();
+    public function handleLegacyRedirect(ExceptionEvent $event): void
+    {
+        $exception = $event->exception;
+        if (!$exception instanceof HttpException || $exception->statusCode !== 404) {
+            return;
+        }
 
-                $url = LegacyRedirectResolver::resolve(
-                    $settings->enableLegacyRedirects,
-                    $settings->eventsListingUrl,
-                    $settings->legacyEventIdParam,
-                    $query,
-                    suffix: 'e',
-                ) ?? LegacyRedirectResolver::resolve(
-                    $settings->enableLegacyRedirects,
-                    $settings->placesListingUrl,
-                    $settings->legacyPlaceIdParam,
-                    $query,
-                    suffix: 'p',
-                );
+        $request = Craft::$app->getRequest();
+        if (!$request->getIsSiteRequest()) {
+            return;
+        }
 
-                if ($url === null) {
-                    return;
-                }
+        $settings = $this->getSettings();
+        $query = $request->getQueryParams();
 
-                Craft::$app->getResponse()->redirect($url, 301);
-                Craft::$app->end();
-            }
+        $url = LegacyRedirectResolver::resolve(
+            $settings->enableLegacyRedirects,
+            $settings->eventsListingUrl,
+            $settings->legacyEventIdParam,
+            $query,
+            suffix: 'e',
+        ) ?? LegacyRedirectResolver::resolve(
+            $settings->enableLegacyRedirects,
+            $settings->placesListingUrl,
+            $settings->legacyPlaceIdParam,
+            $query,
+            suffix: 'p',
         );
+
+        if ($url === null) {
+            return;
+        }
+
+        Craft::$app->getResponse()->redirect($url, 301);
+        Craft::$app->end();
     }
 
     protected function createSettingsModel(): ?Model

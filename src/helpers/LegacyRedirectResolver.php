@@ -11,10 +11,22 @@ final class LegacyRedirectResolver
         array $queryParams,
         string $suffix = 'e',
     ): ?string {
-        if (!$enabled || $listingUrl === '' || $idParam === '' || empty($queryParams[$idParam])) {
+        if (!$enabled || $listingUrl === '' || $idParam === '') {
             return null;
         }
 
-        return rtrim($listingUrl, '/') . '/' . $suffix . '/' . $queryParams[$idParam];
+        $value = $queryParams[$idParam] ?? null;
+
+        if (!is_string($value) && !is_int($value)) {
+            return null;
+        }
+
+        $value = (string) $value;
+
+        if ($value === '') {
+            return null;
+        }
+
+        return rtrim($listingUrl, '/') . '/' . $suffix . '/' . rawurlencode($value);
     }
 }

@@ -62,4 +62,25 @@ class LegacyRedirectResolverTest extends TestCase
 
         $this->assertSame('/events/e/12345', $url);
     }
+
+    public function testReturnsNullWhenQueryParamIsAnArray(): void
+    {
+        $url = LegacyRedirectResolver::resolve(true, '/events', 'event_id', ['event_id' => ['1']]);
+
+        $this->assertNull($url);
+    }
+
+    public function testAllowsZeroAsAValidId(): void
+    {
+        $url = LegacyRedirectResolver::resolve(true, '/events', 'event_id', ['event_id' => '0']);
+
+        $this->assertSame('/events/e/0', $url);
+    }
+
+    public function testEncodesSpecialCharactersInTheId(): void
+    {
+        $url = LegacyRedirectResolver::resolve(true, '/events', 'event_id', ['event_id' => 'a/b?c#d']);
+
+        $this->assertSame('/events/e/' . rawurlencode('a/b?c#d'), $url);
+    }
 }
