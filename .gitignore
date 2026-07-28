@@ -2,4 +2,3 @@
 /composer.lock
 /.phpunit.cache
 /.phpunit.result.cache
-/sync-from-site.sh
