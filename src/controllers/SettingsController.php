@@ -78,6 +78,16 @@ class SettingsController extends Controller
         $enableEvents = (bool) $this->request->getBodyParam('enableEvents', false) && !empty($settings->moduleStatus['events']);
         $enablePlaces = (bool) $this->request->getBodyParam('enablePlaces', false) && !empty($settings->moduleStatus['places']);
 
+        $settings->enableLegacyRedirects = (bool) $this->request->getBodyParam('enableLegacyRedirects', false);
+        $settings->eventsListingUrl = trim((string) $this->request->getBodyParam('eventsListingUrl', ''));
+        $settings->placesListingUrl = trim((string) $this->request->getBodyParam('placesListingUrl', ''));
+        $settings->legacyEventIdParam = trim((string) $this->request->getBodyParam('legacyEventIdParam', 'event_id'));
+        $settings->legacyPlaceIdParam = trim((string) $this->request->getBodyParam('legacyPlaceIdParam', 'place_id'));
+
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl'])) {
+            return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
+        }
+
         Craft::$app->getPlugins()->savePluginSettings(Plugin::getInstance(), [
             'hubname' => $settings->hubname,
             'apiKey' => $settings->apiKey,
@@ -85,6 +95,11 @@ class SettingsController extends Controller
             'moduleStatus' => $settings->moduleStatus,
             'enableEvents' => $enableEvents,
             'enablePlaces' => $enablePlaces,
+            'enableLegacyRedirects' => $settings->enableLegacyRedirects,
+            'eventsListingUrl' => $settings->eventsListingUrl,
+            'placesListingUrl' => $settings->placesListingUrl,
+            'legacyEventIdParam' => $settings->legacyEventIdParam,
+            'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
         ]);
 
         return $this->asSuccess('Settings saved.', redirect: 'settings/plugins/craft-iti-plugin');

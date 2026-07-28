@@ -80,6 +80,48 @@
                 <p class="light">{{ 'Places: not available on this hub.' }}</p>
             {% endif %}
 
+            {{ forms.lightswitchField({
+                label: 'Enable Legacy Redirects',
+                instructions: 'Redirect old links that carried an event or place id as a query-string parameter to the new clean URL.',
+                id: 'enableLegacyRedirects',
+                name: 'enableLegacyRedirects',
+                on: settings.enableLegacyRedirects,
+            }) }}
+
+            {{ forms.textField({
+                label: 'Events Listing URL',
+                instructions: 'The page where the events listing is rendered, e.g. /events.',
+                id: 'eventsListingUrl',
+                name: 'eventsListingUrl',
+                value: settings.eventsListingUrl,
+                errors: settings.getErrors('eventsListingUrl'),
+            }) }}
+
+            {{ forms.textField({
+                label: 'Legacy Event Id Param',
+                instructions: 'The old query-string parameter name that used to carry the event id.',
+                id: 'legacyEventIdParam',
+                name: 'legacyEventIdParam',
+                value: settings.legacyEventIdParam,
+            }) }}
+
+            {{ forms.textField({
+                label: 'Places Listing URL',
+                instructions: 'The page where the places listing is rendered, e.g. /places.',
+                id: 'placesListingUrl',
+                name: 'placesListingUrl',
+                value: settings.placesListingUrl,
+                errors: settings.getErrors('placesListingUrl'),
+            }) }}
+
+            {{ forms.textField({
+                label: 'Legacy Place Id Param',
+                instructions: 'The old query-string parameter name that used to carry the place id.',
+                id: 'legacyPlaceIdParam',
+                name: 'legacyPlaceIdParam',
+                value: settings.legacyPlaceIdParam,
+            }) }}
+
             <div class="buttons">
                 <button type="submit" class="btn submit">{{ 'Save' }}</button>
             </div>
