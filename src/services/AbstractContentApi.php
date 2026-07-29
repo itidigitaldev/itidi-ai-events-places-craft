@@ -4,7 +4,6 @@ namespace iti\craftitiplugin\services;
 
 use Craft;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\GuzzleException;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
 use yii\base\Component;
@@ -79,19 +78,7 @@ abstract class AbstractContentApi extends Component
         $url = self::API_BASE . rawurlencode($hubname) . '/' . $route;
         $client = $this->httpClient ?? Craft::createGuzzleClient(['timeout' => self::TIMEOUT]);
 
-        try {
-            $response = $client->get($url, [
-                'query' => array_merge($queryArgs, ['key' => $resolvedApiKey]),
-                'headers' => ['Accept' => 'application/json'],
-                'http_errors' => false,
-            ]);
-        } catch (GuzzleException $e) {
-            throw new ContentApiException("Couldn't reach ITI Digital. Check your connection and try again.", 0, $e);
-        }
-
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
-            throw new ContentApiException('ITI Digital returned an error response.');
-        }
+        $response = ApiHttpRequest::get($client, $url, array_merge($queryArgs, ['key' => $resolvedApiKey]), 'application/json');
 
         $data = json_decode((string) $response->getBody(), true);
 

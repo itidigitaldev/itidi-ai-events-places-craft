@@ -14,6 +14,17 @@ final class SeoDataFactory
         );
     }
 
+    public static function rewriteLocTags(string $xml, string $currentUrl): string
+    {
+        $targetOrigin = self::buildTargetOrigin($currentUrl);
+
+        return preg_replace_callback(
+            '#<loc>([^<]+)</loc>#',
+            fn (array $matches) => '<loc>' . self::replaceHost($matches[1], $targetOrigin) . '</loc>',
+            $xml,
+        );
+    }
+
     private static function rewriteHost(array $structuredData, string $currentUrl): array
     {
         if (empty($structuredData)) {
@@ -53,14 +64,14 @@ final class SeoDataFactory
         return $item;
     }
 
-    private static function buildTargetOrigin(string $currentUrl): string
+    public static function buildTargetOrigin(string $currentUrl): string
     {
         $port = parse_url($currentUrl, PHP_URL_PORT);
 
         return parse_url($currentUrl, PHP_URL_SCHEME) . '://' . parse_url($currentUrl, PHP_URL_HOST) . ($port !== null ? ':' . $port : '');
     }
 
-    private static function replaceHost(string $url, string $targetOrigin): string
+    public static function replaceHost(string $url, string $targetOrigin): string
     {
         $result = $targetOrigin . (parse_url($url, PHP_URL_PATH) ?? '');
 

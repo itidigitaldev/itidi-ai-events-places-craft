@@ -224,4 +224,42 @@ class SeoDataFactoryTest extends TestCase
         // Canonical URL should also have port (for consistency)
         $this->assertSame('http://mysite.local:8080/events/e/dev-event-789', $seoData->canonicalUrl);
     }
+
+    public function testRewriteLocTagsRewritesMultipleLocValues(): void
+    {
+        $xml = '<urlset><url><loc>https://savannahvirtualvisitorcenter.com/e/one</loc></url>'
+            . '<url><loc>https://savannahvirtualvisitorcenter.com/p/two</loc></url></urlset>';
+
+        $result = SeoDataFactory::rewriteLocTags($xml, 'https://mysite.com/sitemap-events-places.xml');
+
+        $this->assertStringContainsString('<loc>https://mysite.com/e/one</loc>', $result);
+        $this->assertStringContainsString('<loc>https://mysite.com/p/two</loc>', $result);
+    }
+
+    public function testRewriteLocTagsRewritesRegardlessOfOriginalHost(): void
+    {
+        $xml = '<urlset><url><loc>https://some-other-domain.example/e/one</loc></url></urlset>';
+
+        $result = SeoDataFactory::rewriteLocTags($xml, 'https://mysite.com/sitemap-events-places.xml');
+
+        $this->assertStringContainsString('<loc>https://mysite.com/e/one</loc>', $result);
+    }
+
+    public function testRewriteLocTagsPreservesPortAndQueryAndFragment(): void
+    {
+        $xml = '<urlset><url><loc>https://savannahvirtualvisitorcenter.com/e/one?utm=x#section</loc></url></urlset>';
+
+        $result = SeoDataFactory::rewriteLocTags($xml, 'http://mysite.local:8080/sitemap-events-places.xml');
+
+        $this->assertStringContainsString('<loc>http://mysite.local:8080/e/one?utm=x#section</loc>', $result);
+    }
+
+    public function testRewriteLocTagsWithNoLocTagsReturnsInputUnchanged(): void
+    {
+        $xml = '<urlset></urlset>';
+
+        $result = SeoDataFactory::rewriteLocTags($xml, 'https://mysite.com/sitemap-events-places.xml');
+
+        $this->assertSame('<urlset></urlset>', $result);
+    }
 }

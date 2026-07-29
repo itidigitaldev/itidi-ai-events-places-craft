@@ -17,7 +17,11 @@ use iti\craftitiplugin\models\Settings;
 use iti\craftitiplugin\services\EventsApi;
 use iti\craftitiplugin\services\ModuleStatusApi;
 use iti\craftitiplugin\services\PlacesApi;
+use iti\craftitiplugin\services\SitemapApi;
 use iti\craftitiplugin\variables\CraftItiVariable;
+use craft\helpers\UrlHelper;
+use nystudio107\seomatic\events\RegisterSitemapsEvent;
+use nystudio107\seomatic\models\SitemapIndexTemplate;
 use yii\base\Event;
 use yii\web\HttpException;
 
@@ -38,6 +42,7 @@ class Plugin extends BasePlugin
             'moduleStatusApi' => ModuleStatusApi::class,
             'eventsApi' => EventsApi::class,
             'placesApi' => PlacesApi::class,
+            'sitemapApi' => SitemapApi::class,
         ]);
 
         Event::on(
@@ -77,8 +82,27 @@ class Plugin extends BasePlugin
                 $event->rules['<prefix:.*>/p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
                 $event->rules['e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
                 $event->rules['p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
+                $event->rules['sitemap-events-places.xml'] = 'craft-iti-plugin/sitemap/index';
             }
         );
+
+        if (Craft::$app->getPlugins()->isPluginEnabled('seomatic')) {
+            Event::on(
+                SitemapIndexTemplate::class,
+                SitemapIndexTemplate::EVENT_REGISTER_SITEMAPS,
+                function(RegisterSitemapsEvent $event) {
+                    $settings = $this->getSettings();
+                    if (!$settings->enableEvents && !$settings->enablePlaces) {
+                        return;
+                    }
+
+                    $event->sitemaps[] = [
+                        'loc' => UrlHelper::siteUrl('sitemap-events-places.xml'),
+                        'lastmod' => new \DateTime(),
+                    ];
+                }
+            );
+        }
 
         Event::on(ErrorHandler::class, ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION, [$this, 'handleLegacyRedirect']);
     }
