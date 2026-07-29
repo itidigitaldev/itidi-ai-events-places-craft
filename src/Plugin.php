@@ -107,6 +107,21 @@ class Plugin extends BasePlugin
         Event::on(ErrorHandler::class, ErrorHandler::EVENT_BEFORE_HANDLE_EXCEPTION, [$this, 'handleLegacyRedirect']);
     }
 
+    public function uninstall(): void
+    {
+        parent::uninstall();
+
+        // Settings are removed unconditionally by Plugins::uninstallPlugin()
+        // regardless of anything this method does - nothing to gate here.
+        // The 15-minute search cache (idea 1105) would self-expire on its
+        // own; flushing just clears it immediately rather than waiting.
+        // Note: this clears Craft's whole shared cache, not just this
+        // plugin's entries - a deliberate choice (no key registry exists
+        // to scope it), so uninstalling this plugin also clears other
+        // plugins'/Craft core's cached data on the same install.
+        Craft::$app->getCache()->flush();
+    }
+
     public function handleLegacyRedirect(ExceptionEvent $event): void
     {
         $exception = $event->exception;
