@@ -86,7 +86,7 @@ class Plugin extends BasePlugin
             }
         );
 
-        if (Craft::$app->getPlugins()->isPluginEnabled('seomatic')) {
+        if (class_exists(SitemapIndexTemplate::class) && Craft::$app->getPlugins()->isPluginEnabled('seomatic')) {
             Event::on(
                 SitemapIndexTemplate::class,
                 SitemapIndexTemplate::EVENT_REGISTER_SITEMAPS,
@@ -97,7 +97,7 @@ class Plugin extends BasePlugin
                     }
 
                     $event->sitemaps[] = [
-                        'loc' => UrlHelper::siteUrl('sitemap-events-places.xml'),
+                        'loc' => UrlHelper::siteUrl('sitemap-events-places.xml', null, null, $event->siteId),
                         'lastmod' => new \DateTime(),
                     ];
                 }

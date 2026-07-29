@@ -22,7 +22,7 @@ final class SeoDataFactory
             '#<loc>([^<]+)</loc>#',
             fn (array $matches) => '<loc>' . self::replaceHost($matches[1], $targetOrigin) . '</loc>',
             $xml,
-        );
+        ) ?? $xml;
     }
 
     private static function rewriteHost(array $structuredData, string $currentUrl): array
