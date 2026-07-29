@@ -13,6 +13,7 @@ use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
 use iti\craftitiplugin\services\AbstractContentApi;
 use PHPUnit\Framework\TestCase;
+use yii\caching\ArrayCache;
 
 class StubContentApi extends AbstractContentApi
 {
@@ -252,5 +253,115 @@ class AbstractContentApiTest extends TestCase
 
         parse_str($history[0]['request']->getUri()->getQuery(), $query);
         $this->assertSame('6a251e6360e8033e32950389', $query['id']);
+    }
+
+    public function testSearchUrlIncludesTypeSegmentAndSearchParams(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Result']]])),
+        ], $history);
+        $api->cache = new ArrayCache();
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+
+        $uri = $history[0]['request']->getUri();
+        $this->assertSame('/api/v2.0/demo-hub/stub-type/', $uri->getPath());
+
+        parse_str($uri->getQuery(), $query);
+        $this->assertSame('jazz', $query['search']);
+        $this->assertSame('50', $query['limit']);
+    }
+
+    public function testSearchReturnsTypeKeyedArrayUnwrapped(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'A'], ['title' => 'B']]])),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $result = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $this->assertSame([['title' => 'A'], ['title' => 'B']], $result);
+    }
+
+    public function testSearchReturnsEmptyArrayWhenTypeKeyMissing(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['paging' => ['totalItems' => 0]])),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $result = $api->search('demo-hub', 'real-key', 'nonsense-term-xyz');
+
+        $this->assertSame([], $result);
+    }
+
+    public function testSearchThrowsContentApiExceptionOnNetworkFailure(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new ConnectException('Connection refused', new Request('GET', 'test')),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $this->expectException(ContentApiException::class);
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+    }
+
+    public function testSearchThrowsContentApiExceptionOnNonSuccessStatus(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(500, [], 'server error'),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $this->expectException(ContentApiException::class);
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+    }
+
+    public function testSearchThrowsContentApiExceptionOnMalformedJson(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], 'not json'),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $this->expectException(ContentApiException::class);
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+    }
+
+    public function testSearchCachesResultAndDoesNotReRequestWithinTtl(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Cached']]])),
+        ], $history);
+        $api->cache = new ArrayCache();
+
+        $first = $api->search('demo-hub', 'real-key', 'jazz');
+        $second = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $this->assertSame($first, $second);
+        $this->assertCount(1, $history);
+    }
+
+    public function testSearchWithDifferentTermIssuesNewRequest(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Jazz result']]])),
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Blues result']]])),
+        ]));
+        $stack->push(Middleware::history($history));
+        $api = new StubContentApi(['httpClient' => new Client(['handler' => $stack])]);
+        $api->cache = new ArrayCache();
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+        $api->search('demo-hub', 'real-key', 'blues');
+
+        $this->assertCount(2, $history);
     }
 }

@@ -7,13 +7,17 @@ use GuzzleHttp\ClientInterface;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
 use yii\base\Component;
+use yii\caching\CacheInterface;
 
 abstract class AbstractContentApi extends Component
 {
     private const API_BASE = 'https://api.imgoingcalendar.com/api/v2.0/';
     private const TIMEOUT = 30;
+    private const SEARCH_LIMIT_DEFAULT = 50;
+    private const SEARCH_CACHE_TTL = 900;
 
     public ?ClientInterface $httpClient = null;
+    public ?CacheInterface $cache = null;
 
     abstract protected function typeSegment(): string;
 
@@ -52,6 +56,21 @@ abstract class AbstractContentApi extends Component
         }
 
         return $data;
+    }
+
+    public function search(string $hubname, string $resolvedApiKey, string $term, int $limit = self::SEARCH_LIMIT_DEFAULT): array
+    {
+        $cache = $this->cache ?? Craft::$app->getCache();
+        $cacheKey = 'craft-iti-search-' . $this->typeSegment() . '-' . md5($hubname . '|' . $term . '|' . $limit);
+
+        return $cache->getOrSet($cacheKey, function() use ($hubname, $resolvedApiKey, $term, $limit) {
+            $data = $this->request($hubname, $resolvedApiKey, $this->typeSegment() . '/', [
+                'search' => $term,
+                'limit' => $limit,
+            ]);
+
+            return $data[$this->typeSegment()] ?? [];
+        }, self::SEARCH_CACHE_TTL);
     }
 
     private function resolveLimit(?int $requested): int

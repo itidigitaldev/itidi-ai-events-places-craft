@@ -5,6 +5,7 @@ namespace iti\craftitiplugin\variables;
 use Craft;
 use craft\helpers\HtmlPurifier;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use HTMLPurifier_Config;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
@@ -72,6 +73,16 @@ class CraftItiVariable
         $result = $this->renderDetail('places', $id);
 
         return ['html' => $this->markup($result['html']), 'seo' => $result['seo'], 'contentType' => 'places'];
+    }
+
+    public function searchEvents(string $term, ?string $detailBaseUrl = null): array
+    {
+        return $this->search('events', $term, $detailBaseUrl);
+    }
+
+    public function searchPlaces(string $term, ?string $detailBaseUrl = null): array
+    {
+        return $this->search('places', $term, $detailBaseUrl);
     }
 
     private function renderDetail(string $type, string $id): array
@@ -170,6 +181,49 @@ class CraftItiVariable
             'bootstrap' => $response['bootstrap'] ?? [],
             'structuredData' => $response['seo']['structuredData'] ?? [],
         ]);
+    }
+
+    private function search(string $type, string $term, ?string $detailBaseUrl): array
+    {
+        $settings = Plugin::getInstance()->getSettings();
+
+        if ($type === 'events' && !$settings->enableEvents) {
+            return [];
+        }
+
+        if ($type === 'places' && !$settings->enablePlaces) {
+            return [];
+        }
+
+        if (trim($term) === '') {
+            return [];
+        }
+
+        $detailSuffix = $type === 'events' ? 'e/' : 'p/';
+        $detailBaseUrl ??= rtrim(UrlHelper::siteUrl($detailSuffix), '/') . '/';
+
+        $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
+
+        try {
+            $items = $api->search($settings->hubname, $settings->apiKey, $term);
+        } catch (ContentApiException) {
+            return [];
+        }
+
+        return array_map(fn (array $item) => $this->mapSearchItem($item, $type, $detailBaseUrl), $items);
+    }
+
+    private function mapSearchItem(array $item, string $type, string $detailBaseUrl): array
+    {
+        $id = $item['nameId'] ?? '';
+
+        return [
+            'type' => $type === 'events' ? 'event' : 'place',
+            'title' => $item['title'] ?? ($item['name'] ?? ''),
+            'url' => $id !== '' ? $detailBaseUrl . $id : '',
+            'image' => $item['cover']['source'] ?? null,
+            'description' => $item['descriptionText'] ?? ($item['description'] ?? ''),
+        ];
     }
 
     /**
