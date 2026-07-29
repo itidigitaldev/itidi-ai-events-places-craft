@@ -195,12 +195,19 @@ class CraftItiVariable
             return [];
         }
 
-        if (trim($term) === '') {
+        $term = trim($term);
+
+        if ($term === '') {
             return [];
         }
 
         $detailSuffix = $type === 'events' ? 'e/' : 'p/';
-        $detailBaseUrl ??= rtrim(UrlHelper::siteUrl($detailSuffix), '/') . '/';
+        // Unlike renderListing(), which is always called FROM the actual listing
+        // page (so "current URL + suffix" is a sensible default), search results
+        // can be rendered from any page with no relationship to where events/places
+        // live - default to the site root instead, relying on the plugin's bare
+        // e/<id>/p/<id> route rules to resolve correctly regardless of caller.
+        $detailBaseUrl ??= rtrim(UrlHelper::stripQueryString(UrlHelper::siteUrl($detailSuffix)), '/') . '/';
 
         $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
 

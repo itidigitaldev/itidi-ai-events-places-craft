@@ -69,7 +69,8 @@ abstract class AbstractContentApi extends Component
                 'limit' => $limit,
             ]);
 
-            return $data[$this->typeSegment()] ?? [];
+            $items = $data[$this->typeSegment()] ?? [];
+            return is_array($items) ? array_values(array_filter($items, 'is_array')) : [];
         }, self::SEARCH_CACHE_TTL);
     }
 

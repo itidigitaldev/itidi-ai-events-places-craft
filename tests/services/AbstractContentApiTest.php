@@ -297,6 +297,30 @@ class AbstractContentApiTest extends TestCase
         $this->assertSame([], $result);
     }
 
+    public function testSearchReturnsEmptyArrayWhenTypeKeyIsWrongType(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => 'not an array'])),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $result = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $this->assertSame([], $result);
+    }
+
+    public function testSearchFiltersOutNonArrayItemsWithinTheResultsList(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Good'], 'bad-scalar-item', ['title' => 'Also Good']]])),
+        ]);
+        $api->cache = new ArrayCache();
+
+        $result = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $this->assertSame([['title' => 'Good'], ['title' => 'Also Good']], $result);
+    }
+
     public function testSearchThrowsContentApiExceptionOnNetworkFailure(): void
     {
         $api = $this->apiWithMockedResponses([
