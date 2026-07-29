@@ -137,4 +137,56 @@
             </div>
         </form>
     {% endif %}
+
+    <details class="admin-convenience-guide" style="margin-top: 2rem;">
+        <summary><strong>Setup Guide &amp; Twig Reference</strong></summary>
+
+        <h3>Quick Start</h3>
+        <ol>
+            <li>Connect your hub above and enable the modules you need (Events and/or Places).</li>
+            <li>Add <code>{{ '{{ craft.craftIti.eventsList() }}' }}</code> to your events listing template, and <code>{{ '{{ craft.craftIti.placesList() }}' }}</code> to your places listing template.</li>
+            <li>Add <code>{{ '{{ craft.craftIti.eventDetail(id) }}' }}</code> / <code>{{ '{{ craft.craftIti.placeDetail(id) }}' }}</code> to your detail templates — or just use the plugin's own default detail templates, which work with zero setup.</li>
+        </ol>
+
+        {% set eventsBase = settings.eventsListingUrl is defined and settings.eventsListingUrl ? settings.eventsListingUrl : null %}
+        {% set placesBase = settings.placesListingUrl is defined and settings.placesListingUrl ? settings.placesListingUrl : null %}
+
+        <h3>Twig Reference</h3>
+
+        <h4>Listings</h4>
+        <pre><code>{{ '{{ craft.craftIti.eventsList() }}' }}</code></pre>
+        <p class="light">Renders the events listing widget.</p>
+
+        <pre><code>{{ '{{ craft.craftIti.placesList() }}' }}</code></pre>
+        <p class="light">Renders the places listing widget.</p>
+
+        <h4>Detail pages</h4>
+        <pre><code>{{ '{{ craft.craftIti.eventDetail(id) }}' }}</code></pre>
+        <p class="light">
+            Renders one event's detail content. Always reachable at <code>/e/{{ '<id>' }}</code>{% if eventsBase %}, or nested under your configured listing at <code>{{ eventsBase }}/e/{{ '<id>' }}</code>{% endif %}.
+        </p>
+
+        <pre><code>{{ '{{ craft.craftIti.placeDetail(id) }}' }}</code></pre>
+        <p class="light">
+            Renders one place's detail content. Always reachable at <code>/p/{{ '<id>' }}</code>{% if placesBase %}, or nested under your configured listing at <code>{{ placesBase }}/p/{{ '<id>' }}</code>{% endif %}.
+        </p>
+
+        <h4>Detail pages with SEO data</h4>
+        <pre><code>{{ '{{ craft.craftIti.eventDetailWithSeo(id) }}' }}</code></pre>
+        <p class="light">Same as <code>eventDetail()</code>, but also returns SEO metadata (title, description, canonical, structured data) alongside the rendered HTML — used by the plugin's own default detail templates.</p>
+
+        <pre><code>{{ '{{ craft.craftIti.placeDetailWithSeo(id) }}' }}</code></pre>
+        <p class="light">Same as <code>placeDetail()</code>, for places.</p>
+
+        <h4>Search</h4>
+        <pre><code>{{ '{% for r in craft.craftIti.searchEvents(term) %}' }}
+    {{ '{{ r.title }} - {{ r.url }}' }}
+{{ '{% endfor %}' }}</code></pre>
+        <p class="light">Returns matching events for a search term (title, url, image, description) — call this from your own site's search results template; this plugin doesn't render a search page of its own.</p>
+
+        <pre><code>{{ '{% for r in craft.craftIti.searchPlaces(term) %}' }}
+    {{ '{{ r.title }} - {{ r.url }}' }}
+{{ '{% endfor %}' }}</code></pre>
+        <p class="light">Same as <code>searchEvents()</code>, for places.</p>
+    </details>
 {% endblock %}
