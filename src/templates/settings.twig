@@ -160,29 +160,33 @@
         <pre><code>{{ '{{ craft.craftIti.placesList() }}' }}</code></pre>
         <p class="light">Renders the places listing widget.</p>
 
+        <p class="light">Both accept an optional filters array (<code>listingBaseUrl</code>, <code>detailBaseUrl</code>, <code>page</code>) if you need to override the defaults.</p>
+
         <h4>Detail pages</h4>
         <pre><code>{{ '{{ craft.craftIti.eventDetail(id) }}' }}</code></pre>
         <p class="light">
-            Renders one event's detail content. Always reachable at <code>/e/{{ '<id>' }}</code>{% if eventsBase %}, or nested under your configured listing at <code>{{ eventsBase }}/e/{{ '<id>' }}</code>{% endif %}.
+            Renders one event's detail content. Always reachable at <code>/e/{{ '<id>' }}</code>{% if eventsBase %}, or nested under your configured listing at <code>{{ eventsBase|trim('/', 'right') }}/e/{{ '<id>' }}</code>{% endif %}.
         </p>
 
         <pre><code>{{ '{{ craft.craftIti.placeDetail(id) }}' }}</code></pre>
         <p class="light">
-            Renders one place's detail content. Always reachable at <code>/p/{{ '<id>' }}</code>{% if placesBase %}, or nested under your configured listing at <code>{{ placesBase }}/p/{{ '<id>' }}</code>{% endif %}.
+            Renders one place's detail content. Always reachable at <code>/p/{{ '<id>' }}</code>{% if placesBase %}, or nested under your configured listing at <code>{{ placesBase|trim('/', 'right') }}/p/{{ '<id>' }}</code>{% endif %}.
         </p>
 
         <h4>Detail pages with SEO data</h4>
-        <pre><code>{{ '{{ craft.craftIti.eventDetailWithSeo(id) }}' }}</code></pre>
-        <p class="light">Same as <code>eventDetail()</code>, but also returns SEO metadata (title, description, canonical, structured data) alongside the rendered HTML — used by the plugin's own default detail templates.</p>
+        <pre><code>{{ '{% set result = craft.craftIti.eventDetailWithSeo(id) %}' }}
+{{ '{{ result.html }}' }}</code></pre>
+        <p class="light">Same as <code>eventDetail()</code>, but also returns SEO metadata (<code>result.seo</code>: title, description, canonical, structured data) alongside the rendered HTML in <code>result.html</code> — used by the plugin's own default detail templates.</p>
 
-        <pre><code>{{ '{{ craft.craftIti.placeDetailWithSeo(id) }}' }}</code></pre>
+        <pre><code>{{ '{% set result = craft.craftIti.placeDetailWithSeo(id) %}' }}
+{{ '{{ result.html }}' }}</code></pre>
         <p class="light">Same as <code>placeDetail()</code>, for places.</p>
 
         <h4>Search</h4>
         <pre><code>{{ '{% for r in craft.craftIti.searchEvents(term) %}' }}
     {{ '{{ r.title }} - {{ r.url }}' }}
 {{ '{% endfor %}' }}</code></pre>
-        <p class="light">Returns matching events for a search term (title, url, image, description) — call this from your own site's search results template; this plugin doesn't render a search page of its own.</p>
+        <p class="light">Returns matching events for a search term (title, url, image, description) — call this from your own site's search results template; this plugin doesn't render a search page of its own. Both accept an optional second argument, <code>detailBaseUrl</code>, to override the default detail link base.</p>
 
         <pre><code>{{ '{% for r in craft.craftIti.searchPlaces(term) %}' }}
     {{ '{{ r.title }} - {{ r.url }}' }}
