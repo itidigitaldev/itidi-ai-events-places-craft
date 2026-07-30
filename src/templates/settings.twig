@@ -193,4 +193,234 @@
 {{ '{% endfor %}' }}</code></pre>
         <p class="light">Same as <code>searchEvents()</code>, for places.</p>
     </details>
+
+    <details class="admin-convenience-tag-builder" style="margin-top: 2rem;">
+        <summary><strong>Tag Builder</strong></summary>
+
+        <p class="light">Pick a content type and toggle the filters you want — the Twig snippet below updates automatically.</p>
+
+        <div class="field">
+            <div class="heading"><label for="craftItiTagBuilderType">Content type</label></div>
+            <div class="input">
+                <select id="craftItiTagBuilderType">
+                    <option value="events" selected>Events</option>
+                    <option value="places">Places</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="craftItiTagBuilderEvents" class="craft-iti-tag-builder-panel">
+            <h4>Events filters</h4>
+
+            <p><label><input type="checkbox" data-filter-key="oneRow" data-filter-type="bool"> One row</label></p>
+            <p><label><input type="checkbox" data-filter-key="editorChoice" data-filter-type="bool"> Editor's choice</label></p>
+            <p><label>Favorite category ID <input type="text" data-filter-key="favEventCategoryId" data-filter-type="string"></label></p>
+            <p><label>Location group ID <input type="text" data-filter-key="locationGroupId" data-filter-type="string"></label></p>
+
+            <fieldset>
+                <legend>Date filter</legend>
+                <p><label><input type="radio" name="craftItiEventsDateMode" value="none" checked> None</label></p>
+                <p><label><input type="radio" name="craftItiEventsDateMode" value="date"> Specific date</label></p>
+                <p><label><input type="radio" name="craftItiEventsDateMode" value="range"> Date range</label></p>
+
+                <div data-date-mode-fields="date" hidden>
+                    <p><label>Date <input type="text" data-filter-key="date" data-filter-type="string" placeholder="today"></label></p>
+                </div>
+                <div data-date-mode-fields="range" hidden>
+                    <p><label>Start <input type="text" data-filter-key="start" data-filter-type="string" placeholder="2026-08-01"></label></p>
+                    <p><label>End <input type="text" data-filter-key="end" data-filter-type="string" placeholder="2026-08-31"></label></p>
+                </div>
+            </fieldset>
+
+            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="up to 100" min="1" max="100"></label></p>
+        </div>
+
+        <div id="craftItiTagBuilderPlaces" class="craft-iti-tag-builder-panel" hidden>
+            <h4>Places filters</h4>
+
+            <p><label><input type="checkbox" data-filter-key="editorChoice" data-filter-type="bool"> Editor's choice</label></p>
+            <p><label>Custom category ID <input type="text" data-filter-key="customCategoryId" data-filter-type="string"></label></p>
+            <p><label>Favorite listing ID <input type="text" data-filter-key="favListingId" data-filter-type="string"></label></p>
+            <p><label>Location group ID <input type="text" data-filter-key="locationGroupId" data-filter-type="string"></label></p>
+            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="up to 50" min="1" max="50"></label></p>
+        </div>
+
+        <div class="buttons">
+            <button type="button" class="btn" id="craftItiTagBuilderCopy">{{ 'Copy snippet' }}</button>
+            <button type="button" class="btn" id="craftItiTagBuilderReset">{{ 'Reset' }}</button>
+        </div>
+
+        <pre><code id="craftItiTagBuilderOutput"></code></pre>
+
+        <script>
+        {% verbatim %}
+        (function () {
+            var typeSelect = document.getElementById('craftItiTagBuilderType');
+            var panels = {
+                events: document.getElementById('craftItiTagBuilderEvents'),
+                places: document.getElementById('craftItiTagBuilderPlaces')
+            };
+            var methodNames = { events: 'eventsList', places: 'placesList' };
+            var output = document.getElementById('craftItiTagBuilderOutput');
+            var copyButton = document.getElementById('craftItiTagBuilderCopy');
+            var resetButton = document.getElementById('craftItiTagBuilderReset');
+
+            function currentType() {
+                return typeSelect.value === 'places' ? 'places' : 'events';
+            }
+
+            function currentPanel() {
+                return panels[currentType()];
+            }
+
+            function escapeSingleQuotes(value) {
+                return value.replace(/'/g, "\\'");
+            }
+
+            function collectFilters(panel) {
+                var filters = {};
+
+                panel.querySelectorAll('[data-filter-key]').forEach(function (field) {
+                    var group = field.closest('[data-date-mode-fields]');
+                    if (group && group.hidden) {
+                        return;
+                    }
+
+                    var key = field.getAttribute('data-filter-key');
+                    var type = field.getAttribute('data-filter-type');
+
+                    if (type === 'bool') {
+                        if (field.checked) {
+                            filters[key] = true;
+                        }
+                        return;
+                    }
+
+                    var value = field.value.trim();
+                    if (value === '') {
+                        return;
+                    }
+
+                    filters[key] = type === 'int' ? parseInt(value, 10) : value;
+                });
+
+                return filters;
+            }
+
+            function buildSnippet(type, filters) {
+                var method = methodNames[type];
+                var keys = Object.keys(filters);
+
+                if (keys.length === 0) {
+                    return '{{ craft.craftIti.' + method + '() }}';
+                }
+
+                var pairs = keys.map(function (key) {
+                    var value = filters[key];
+
+                    if (typeof value === 'boolean') {
+                        return key + ': true';
+                    }
+
+                    if (typeof value === 'number') {
+                        return key + ': ' + value;
+                    }
+
+                    return key + ": '" + escapeSingleQuotes(value) + "'";
+                });
+
+                return '{{ craft.craftIti.' + method + '({ ' + pairs.join(', ') + ' }) }}';
+            }
+
+            function render() {
+                var type = currentType();
+                var filters = collectFilters(currentPanel());
+                output.textContent = buildSnippet(type, filters);
+            }
+
+            function updateDateModeVisibility(panel) {
+                var checked = panel.querySelector('input[name="craftItiEventsDateMode"]:checked');
+                var mode = checked ? checked.value : 'none';
+
+                panel.querySelectorAll('[data-date-mode-fields]').forEach(function (group) {
+                    group.hidden = group.getAttribute('data-date-mode-fields') !== mode;
+                });
+            }
+
+            typeSelect.addEventListener('change', function () {
+                var type = currentType();
+                panels.events.hidden = type !== 'events';
+                panels.places.hidden = type !== 'places';
+                render();
+            });
+
+            Object.keys(panels).forEach(function (type) {
+                var panel = panels[type];
+
+                panel.addEventListener('input', render);
+                panel.addEventListener('change', function (event) {
+                    if (event.target.name === 'craftItiEventsDateMode') {
+                        updateDateModeVisibility(panel);
+                    }
+                    render();
+                });
+            });
+
+            function fallbackCopy(text) {
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+
+                try {
+                    document.execCommand('copy');
+                } catch (e) {
+                    // Nothing more we can do here - the snippet is still visible to copy by hand.
+                }
+
+                document.body.removeChild(textarea);
+            }
+
+            copyButton.addEventListener('click', function () {
+                var text = output.textContent;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                    return;
+                }
+
+                fallbackCopy(text);
+            });
+
+            resetButton.addEventListener('click', function () {
+                var panel = currentPanel();
+
+                panel.querySelectorAll('input[type="checkbox"]').forEach(function (field) {
+                    field.checked = false;
+                });
+
+                panel.querySelectorAll('input[type="text"], input[type="number"]').forEach(function (field) {
+                    field.value = '';
+                });
+
+                var noneRadio = panel.querySelector('input[name="craftItiEventsDateMode"][value="none"]');
+                if (noneRadio) {
+                    noneRadio.checked = true;
+                    updateDateModeVisibility(panel);
+                }
+
+                render();
+            });
+
+            updateDateModeVisibility(panels.events);
+            render();
+        })();
+        {% endverbatim %}
+        </script>
+    </details>
 {% endblock %}
