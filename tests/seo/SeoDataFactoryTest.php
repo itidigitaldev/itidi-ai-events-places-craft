@@ -262,4 +262,55 @@ class SeoDataFactoryTest extends TestCase
 
         $this->assertSame('<urlset></urlset>', $result);
     }
+
+    public function testCanonicalSourceUrlIsHostRewrittenToCurrentSite(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse(
+            [],
+            'https://mysite.com/e/some-event-abc123',
+            'https://savannahvirtualvisitorcenter.com/events/e/some-event-abc123/',
+        );
+
+        $this->assertSame('https://mysite.com/events/e/some-event-abc123/', $seoData->canonicalUrl);
+    }
+
+    public function testCanonicalSourceUrlHostRewritePreservesPort(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse(
+            [],
+            'http://mysite.local:8080/e/some-event-abc123',
+            'https://savannahvirtualvisitorcenter.com/events/e/some-event-abc123/',
+        );
+
+        $this->assertSame('http://mysite.local:8080/events/e/some-event-abc123/', $seoData->canonicalUrl);
+    }
+
+    public function testNullCanonicalSourceUrlFallsBackToCurrentUrl(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse(
+            [],
+            'https://mysite.com/e/some-event-abc123',
+            null,
+        );
+
+        $this->assertSame('https://mysite.com/e/some-event-abc123', $seoData->canonicalUrl);
+    }
+
+    public function testOmittedCanonicalSourceUrlArgumentFallsBackToCurrentUrl(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse([], 'https://mysite.com/e/some-event-abc123');
+
+        $this->assertSame('https://mysite.com/e/some-event-abc123', $seoData->canonicalUrl);
+    }
+
+    public function testEmptyStringCanonicalSourceUrlFallsBackToCurrentUrl(): void
+    {
+        $seoData = SeoDataFactory::fromDetailResponse(
+            [],
+            'https://mysite.com/e/some-event-abc123',
+            '',
+        );
+
+        $this->assertSame('https://mysite.com/e/some-event-abc123', $seoData->canonicalUrl);
+    }
 }

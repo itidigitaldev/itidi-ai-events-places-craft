@@ -109,4 +109,41 @@ class SettingsTest extends TestCase
         $this->assertSame('event_id', $settings->legacyEventIdParam);
         $this->assertSame('place_id', $settings->legacyPlaceIdParam);
     }
+
+    public function testCanonicalUrlSourceDefaultsToSsr(): void
+    {
+        $settings = new Settings();
+
+        $this->assertSame('ssr', $settings->canonicalUrlSource);
+    }
+
+    public function testSsrCanonicalUrlSourcePassesValidation(): void
+    {
+        $settings = new Settings();
+        $settings->canonicalUrlSource = 'ssr';
+
+        $settings->validate(['canonicalUrlSource']);
+
+        $this->assertFalse($settings->hasErrors('canonicalUrlSource'));
+    }
+
+    public function testSitemapCanonicalUrlSourcePassesValidation(): void
+    {
+        $settings = new Settings();
+        $settings->canonicalUrlSource = 'sitemap';
+
+        $settings->validate(['canonicalUrlSource']);
+
+        $this->assertFalse($settings->hasErrors('canonicalUrlSource'));
+    }
+
+    public function testUnrecognizedCanonicalUrlSourceFailsValidation(): void
+    {
+        $settings = new Settings();
+        $settings->canonicalUrlSource = 'something-else';
+
+        $settings->validate(['canonicalUrlSource']);
+
+        $this->assertTrue($settings->hasErrors('canonicalUrlSource'));
+    }
 }

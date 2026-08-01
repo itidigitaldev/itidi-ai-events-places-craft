@@ -4,6 +4,11 @@ namespace iti\craftitiplugin\services;
 
 class PlacesApi extends AbstractContentApi
 {
+    public function sitemapType(): string
+    {
+        return 'place';
+    }
+
     protected function typeSegment(): string
     {
         return 'places';

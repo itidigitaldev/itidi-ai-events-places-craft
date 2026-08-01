@@ -4,6 +4,11 @@ namespace iti\craftitiplugin\services;
 
 class EventsApi extends AbstractContentApi
 {
+    public function sitemapType(): string
+    {
+        return 'event';
+    }
+
     protected function typeSegment(): string
     {
         return 'events';

@@ -122,6 +122,18 @@
                 value: settings.legacyPlaceIdParam,
             }) }}
 
+            {{ forms.selectField({
+                label: 'Canonical URL Source',
+                instructions: 'Where the canonical tag on event/place detail pages comes from. SSR Response reuses data already fetched for the page (fast, recommended). Sitemap Feed calls a separate, larger endpoint fresh on every single page load, with no caching — only enable this if ITI Digital has told you to.',
+                id: 'canonicalUrlSource',
+                name: 'canonicalUrlSource',
+                value: settings.canonicalUrlSource,
+                options: [
+                    { label: 'SSR Response (default)', value: 'ssr' },
+                    { label: 'Sitemap Feed (no caching — live request every page load)', value: 'sitemap' },
+                ],
+            }) }}
+
             <div class="buttons">
                 <button type="submit" class="btn submit">{{ 'Save' }}</button>
             </div>

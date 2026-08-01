@@ -41,10 +41,21 @@ class StubContentApi extends AbstractContentApi
             'page' => $page,
         ];
     }
+
+    public function sitemapType(): string
+    {
+        return 'stub-type-singular';
+    }
 }
 
 class AbstractContentApiTest extends TestCase
 {
+    public function testExtractRawIdIsPubliclyAccessible(): void
+    {
+        $this->assertSame('6a251e6360e8033e32950389', AbstractContentApi::extractRawId('my-event-name-6a251e6360e8033e32950389'));
+        $this->assertSame('6a251e6360e8033e32950389', AbstractContentApi::extractRawId('6a251e6360e8033e32950389'));
+    }
+
     private function apiWithMockedResponses(array $responses, ?array &$history = null): StubContentApi
     {
         $stack = HandlerStack::create(new MockHandler($responses));

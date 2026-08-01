@@ -58,6 +58,7 @@ class SettingsController extends Controller
             'placesListingUrl' => $settings->placesListingUrl,
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
+            'canonicalUrlSource' => $settings->canonicalUrlSource,
         ]);
 
         if (!$saved) {
@@ -87,8 +88,9 @@ class SettingsController extends Controller
         $settings->placesListingUrl = trim((string) $this->request->getBodyParam('placesListingUrl', ''));
         $settings->legacyEventIdParam = trim((string) $this->request->getBodyParam('legacyEventIdParam', 'event_id'));
         $settings->legacyPlaceIdParam = trim((string) $this->request->getBodyParam('legacyPlaceIdParam', 'place_id'));
+        $settings->canonicalUrlSource = trim((string) $this->request->getBodyParam('canonicalUrlSource', 'ssr'));
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl'])) {
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -104,6 +106,7 @@ class SettingsController extends Controller
             'placesListingUrl' => $settings->placesListingUrl,
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
+            'canonicalUrlSource' => $settings->canonicalUrlSource,
         ]);
 
         return $this->asSuccess('Settings saved.', redirect: 'settings/plugins/craft-iti-plugin');
@@ -127,6 +130,7 @@ class SettingsController extends Controller
             'placesListingUrl' => $settings->placesListingUrl,
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
+            'canonicalUrlSource' => $settings->canonicalUrlSource,
         ]);
 
         return $this->asSuccess('Disconnected.', redirect: 'settings/plugins/craft-iti-plugin');

@@ -152,4 +152,11 @@ class PlacesApiTest extends TestCase
         $this->assertSame('https://example.com/list/p/', $query['detailBaseUrl']);
         $this->assertSame('2', $query['page']);
     }
+
+    public function testSitemapTypeReturnsPlace(): void
+    {
+        $api = new PlacesApi();
+
+        $this->assertSame('place', $api->sitemapType());
+    }
 }

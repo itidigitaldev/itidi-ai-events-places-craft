@@ -21,6 +21,8 @@ abstract class AbstractContentApi extends Component
 
     abstract protected function typeSegment(): string;
 
+    abstract public function sitemapType(): string;
+
     abstract protected function notFoundStatusCode(): int;
 
     abstract protected function ceilingLimit(): int;
@@ -43,7 +45,7 @@ abstract class AbstractContentApi extends Component
 
     public function fetchDetail(string $hubname, string $resolvedApiKey, string $id): array
     {
-        $queryArgs = ['id' => $this->extractRawId($id), 'format' => 'fragment', 'assetMode' => 'external'];
+        $queryArgs = ['id' => self::extractRawId($id), 'format' => 'fragment', 'assetMode' => 'external'];
 
         try {
             $data = $this->request($hubname, $resolvedApiKey, $this->typeSegment() . '/ssr-detail', $queryArgs);
@@ -87,7 +89,7 @@ abstract class AbstractContentApi extends Component
      * before the last hyphen - the same assumption the WordPress reference
      * plugin's own id extraction makes.
      */
-    private function extractRawId(string $id): string
+    public static function extractRawId(string $id): string
     {
         $segments = explode('-', $id);
         return trim((string) end($segments), '/');

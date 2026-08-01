@@ -17,12 +17,14 @@ class Settings extends Model
     public string $placesListingUrl = '';
     public string $legacyEventIdParam = 'event_id';
     public string $legacyPlaceIdParam = 'place_id';
+    public string $canonicalUrlSource = 'ssr';
 
     protected function defineRules(): array
     {
         return [
             [['hubname', 'apiKey', 'eventsListingUrl', 'placesListingUrl', 'legacyEventIdParam', 'legacyPlaceIdParam'], 'trim'],
             [['eventsListingUrl', 'placesListingUrl'], 'required', 'when' => fn(Settings $model) => $model->enableLegacyRedirects],
+            [['canonicalUrlSource'], 'in', 'range' => ['ssr', 'sitemap']],
         ];
     }
 }

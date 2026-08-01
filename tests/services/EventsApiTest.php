@@ -175,4 +175,11 @@ class EventsApiTest extends TestCase
         $this->assertSame('https://example.com/list/e/', $query['detailBaseUrl']);
         $this->assertSame('3', $query['page']);
     }
+
+    public function testSitemapTypeReturnsEvent(): void
+    {
+        $api = new EventsApi();
+
+        $this->assertSame('event', $api->sitemapType());
+    }
 }

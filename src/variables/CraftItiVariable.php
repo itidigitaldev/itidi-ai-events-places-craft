@@ -10,7 +10,9 @@ use HTMLPurifier_Config;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
 use iti\craftitiplugin\Plugin;
+use iti\craftitiplugin\seo\CanonicalUrlResolver;
 use iti\craftitiplugin\seo\SeoDataFactory;
+use iti\craftitiplugin\services\AbstractContentApi;
 use iti\craftitiplugin\web\assets\eventshadowdom\EventShadowDomAsset;
 use iti\craftitiplugin\web\assets\listinginit\ListingInitAsset;
 use iti\craftitiplugin\web\assets\placeshadowdom\PlaceShadowDomAsset;
@@ -129,7 +131,20 @@ class CraftItiVariable
             'cssAssets' => $response['assets']['css'] ?? [],
         ]);
 
-        $seoData = SeoDataFactory::fromDetailResponse($response['seo'] ?? [], Craft::$app->getRequest()->getAbsoluteUrl());
+        $currentUrl = Craft::$app->getRequest()->getAbsoluteUrl();
+        $seo = $response['seo'] ?? [];
+
+        $canonicalSourceUrl = CanonicalUrlResolver::resolve(
+            $settings->canonicalUrlSource,
+            Plugin::getInstance()->sitemapApi,
+            $settings->hubname,
+            $settings->apiKey,
+            $api->sitemapType(),
+            AbstractContentApi::extractRawId($id),
+            $seo['canonicalUrl'] ?? null,
+        );
+
+        $seoData = SeoDataFactory::fromDetailResponse($seo, $currentUrl, $canonicalSourceUrl);
 
         return ['html' => $html, 'seo' => $seoData];
     }

@@ -4,12 +4,14 @@ namespace iti\craftitiplugin\seo;
 
 final class SeoDataFactory
 {
-    public static function fromDetailResponse(array $seo, string $currentUrl): SeoData
+    public static function fromDetailResponse(array $seo, string $currentUrl, ?string $canonicalSourceUrl = null): SeoData
     {
         return new SeoData(
             title: (string) ($seo['metaTitle'] ?? ''),
             description: (string) ($seo['metaDescription'] ?? ''),
-            canonicalUrl: $currentUrl,
+            canonicalUrl: ($canonicalSourceUrl !== null && $canonicalSourceUrl !== '')
+                ? self::replaceHost($canonicalSourceUrl, self::buildTargetOrigin($currentUrl))
+                : $currentUrl,
             structuredData: self::rewriteHost($seo['structuredData'] ?? [], $currentUrl),
         );
     }
