@@ -9,3 +9,14 @@
   });
   window.{{ globalName }}.cssAssets = {{ cssAssets|json_encode|raw }};
 </script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'itidi_detail_view',
+    itidi_type: {{ analyticsData.itidi_type|json_encode|raw }},
+    itidi_id: {{ analyticsData.itidi_id|json_encode|raw }},
+    itidi_name_id: {{ analyticsData.itidi_name_id|json_encode|raw }},
+    itidi_canonical_url: {{ analyticsData.itidi_canonical_url|json_encode|raw }},
+    itidi_visited_url: {{ analyticsData.itidi_visited_url|json_encode|raw }}
+  });
+</script>

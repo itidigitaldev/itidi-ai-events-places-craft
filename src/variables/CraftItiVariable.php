@@ -134,17 +134,9 @@ class CraftItiVariable
         $prefix = 'craft-iti-' . $type;
         $uuid = StringHelper::UUID();
 
-        $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail', [
-            'sourceId' => $prefix . '-source-' . $uuid,
-            'shadowId' => $prefix . '-shadow-' . $uuid,
-            'sanitizedHtml' => $this->sanitizeSsrHtml($response['html']),
-            'globalName' => $type === 'events' ? 'itiEventShadowDom' : 'itiPlaceShadowDom',
-            'bootstrap' => $response['bootstrap'] ?? [],
-            'cssAssets' => $response['assets']['css'] ?? [],
-        ]);
-
         $currentUrl = Craft::$app->getRequest()->getAbsoluteUrl();
         $seo = $response['seo'] ?? [];
+        $rawId = AbstractContentApi::extractRawId($id);
 
         $canonicalSourceUrl = CanonicalUrlResolver::resolve(
             $settings->canonicalUrlSource,
@@ -152,11 +144,27 @@ class CraftItiVariable
             $settings->hubname,
             $settings->apiKey,
             $api->sitemapType(),
-            AbstractContentApi::extractRawId($id),
+            $rawId,
             $seo['canonicalUrl'] ?? null,
         );
 
         $seoData = SeoDataFactory::fromDetailResponse($seo, $currentUrl, $canonicalSourceUrl);
+
+        $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail', [
+            'sourceId' => $prefix . '-source-' . $uuid,
+            'shadowId' => $prefix . '-shadow-' . $uuid,
+            'sanitizedHtml' => $this->sanitizeSsrHtml($response['html']),
+            'globalName' => $type === 'events' ? 'itiEventShadowDom' : 'itiPlaceShadowDom',
+            'bootstrap' => $response['bootstrap'] ?? [],
+            'cssAssets' => $response['assets']['css'] ?? [],
+            'analyticsData' => [
+                'itidi_type' => $type === 'events' ? 'event' : 'place',
+                'itidi_id' => $rawId,
+                'itidi_name_id' => $id,
+                'itidi_canonical_url' => $seoData->canonicalUrl,
+                'itidi_visited_url' => $currentUrl,
+            ],
+        ]);
 
         return ['html' => $html, 'seo' => $seoData];
     }
