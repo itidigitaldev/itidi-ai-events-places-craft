@@ -9,7 +9,6 @@ use craft\helpers\UrlHelper;
 use HTMLPurifier_Config;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
-use iti\craftitiplugin\helpers\SubmissionFormRouteResolver;
 use iti\craftitiplugin\Plugin;
 use iti\craftitiplugin\seo\CanonicalUrlResolver;
 use iti\craftitiplugin\seo\SeoDataFactory;
@@ -62,16 +61,6 @@ class CraftItiVariable
     public function placeDetail(string $id): Markup
     {
         return $this->markup($this->renderDetail('places', $id)['html']);
-    }
-
-    public function eventSubmissionForm(): Markup
-    {
-        return $this->markup($this->renderSubmissionForm('event'));
-    }
-
-    public function placeSubmissionForm(): Markup
-    {
-        return $this->markup($this->renderSubmissionForm('place'));
     }
 
     public function eventDetailWithSeo(string $id): array
@@ -245,30 +234,6 @@ class CraftItiVariable
         }
 
         return array_map(fn (array $item) => $this->mapSearchItem($item, $type, $detailBaseUrl), $items);
-    }
-
-    private function renderSubmissionForm(string $type): string
-    {
-        $settings = Plugin::getInstance()->getSettings();
-
-        $enabled = $type === 'event' ? $settings->enableEventSubmissionForm : $settings->enablePlaceSubmissionForm;
-
-        if (!$enabled) {
-            return $type === 'event' ? 'Event submission form is disabled.' : 'Place submission form is disabled.';
-        }
-
-        if ($settings->hubname === '') {
-            return 'ITI Digital Hubname is missing. Please configure the plugin settings first.';
-        }
-
-        $route = SubmissionFormRouteResolver::resolve($settings->hubname, $type);
-
-        Craft::$app->getView()->registerJsFile('https://imgoingcalendar.com/imgoingscript.js', ['async' => true]);
-
-        return Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/submission-form', [
-            'uniqueId' => 'craft-iti-submission-' . StringHelper::UUID(),
-            'route' => $route,
-        ]);
     }
 
     private function mapSearchItem(array $item, string $type, string $detailBaseUrl): array

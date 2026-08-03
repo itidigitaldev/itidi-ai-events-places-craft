@@ -19,14 +19,6 @@ class SettingsTest extends TestCase
         $this->assertFalse($settings->enablePlaces);
     }
 
-    public function testSubmissionFormTogglesDefaultToFalse(): void
-    {
-        $settings = new Settings();
-
-        $this->assertFalse($settings->enableEventSubmissionForm);
-        $this->assertFalse($settings->enablePlaceSubmissionForm);
-    }
-
     public function testLiteralApiKeyPassesValidation(): void
     {
         $settings = new Settings();
