@@ -53,6 +53,8 @@ class SettingsController extends Controller
             'moduleStatus' => $modules,
             'enableEvents' => false,
             'enablePlaces' => false,
+            'enableEventSubmissionForm' => false,
+            'enablePlaceSubmissionForm' => false,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -84,6 +86,8 @@ class SettingsController extends Controller
 
         $settings->enableEvents = (bool) $this->request->getBodyParam('enableEvents', false) && !empty($settings->moduleStatus['events']);
         $settings->enablePlaces = (bool) $this->request->getBodyParam('enablePlaces', false) && !empty($settings->moduleStatus['places']);
+        $settings->enableEventSubmissionForm = (bool) $this->request->getBodyParam('enableEventSubmissionForm', false) && !empty($settings->moduleStatus['events']);
+        $settings->enablePlaceSubmissionForm = (bool) $this->request->getBodyParam('enablePlaceSubmissionForm', false) && !empty($settings->moduleStatus['places']);
         $settings->enableLegacyRedirects = (bool) $this->request->getBodyParam('enableLegacyRedirects', false);
         $settings->eventsListingUrl = trim((string) $this->request->getBodyParam('eventsListingUrl', ''));
         $settings->placesListingUrl = trim((string) $this->request->getBodyParam('placesListingUrl', ''));
@@ -102,6 +106,8 @@ class SettingsController extends Controller
             'moduleStatus' => $settings->moduleStatus,
             'enableEvents' => $settings->enableEvents,
             'enablePlaces' => $settings->enablePlaces,
+            'enableEventSubmissionForm' => $settings->enableEventSubmissionForm,
+            'enablePlaceSubmissionForm' => $settings->enablePlaceSubmissionForm,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -127,6 +133,8 @@ class SettingsController extends Controller
             'moduleStatus' => ['events' => false, 'places' => false],
             'enableEvents' => false,
             'enablePlaces' => false,
+            'enableEventSubmissionForm' => false,
+            'enablePlaceSubmissionForm' => false,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,

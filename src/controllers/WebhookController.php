@@ -110,12 +110,14 @@ class WebhookController extends Controller
             $eventsAvailable = (bool) $modules['events'];
             $settings->moduleStatus['events'] = $eventsAvailable;
             $settings->enableEvents = $eventsAvailable;
+            $settings->enableEventSubmissionForm = $settings->enableEventSubmissionForm && $eventsAvailable;
         }
 
         if (array_key_exists('places', $modules)) {
             $placesAvailable = (bool) $modules['places'];
             $settings->moduleStatus['places'] = $placesAvailable;
             $settings->enablePlaces = $placesAvailable;
+            $settings->enablePlaceSubmissionForm = $settings->enablePlaceSubmissionForm && $placesAvailable;
         }
 
         try {

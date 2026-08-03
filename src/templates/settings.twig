@@ -80,6 +80,30 @@
                 <p class="light">{{ 'Places: not available on this hub.' }}</p>
             {% endif %}
 
+            {% if settings.moduleStatus['events'] %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Event Submission Form',
+                    instructions: 'Allow craft.craftIti.eventSubmissionForm() to render an embedded form visitors can use to submit new events for approval. Add the tag to a template to display it. Independent of Enable Events above.',
+                    id: 'enableEventSubmissionForm',
+                    name: 'enableEventSubmissionForm',
+                    on: settings.enableEventSubmissionForm,
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Event submission form: not available on this hub.' }}</p>
+            {% endif %}
+
+            {% if settings.moduleStatus['places'] %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Place Submission Form',
+                    instructions: 'Allow craft.craftIti.placeSubmissionForm() to render an embedded form visitors can use to submit new places for approval. Add the tag to a template to display it. Independent of Enable Places above.',
+                    id: 'enablePlaceSubmissionForm',
+                    name: 'enablePlaceSubmissionForm',
+                    on: settings.enablePlaceSubmissionForm,
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Place submission form: not available on this hub.' }}</p>
+            {% endif %}
+
             {{ forms.lightswitchField({
                 label: 'Enable Legacy Redirects',
                 instructions: 'Redirect old links that carried an event or place id as a query-string parameter to the new clean URL.',
@@ -225,6 +249,15 @@
     {{ '{{ r.title }} - {{ r.url }}' }}
 {{ '{% endfor %}' }}</code></pre>
         <p class="light">Same as <code>searchEvents()</code>, for places.</p>
+
+        <h4>Submission forms</h4>
+        <pre><code>{{ '{{ craft.craftIti.eventSubmissionForm() }}' }}</code></pre>
+        <p class="light">Renders an embedded form visitors can use to submit a new event for approval. Requires the Enable Event Submission Form toggle above.</p>
+
+        <pre><code>{{ '{{ craft.craftIti.placeSubmissionForm() }}' }}</code></pre>
+        <p class="light">Same as <code>eventSubmissionForm()</code>, for places.</p>
+
+        <p class="light">Only one ITI Digital widget can bootstrap per page — don't combine a submission form with another submission form, with eventsList()/placesList(), or with an event/place detail embed on the same page. Give the submission form its own page.</p>
     </details>
 
     <details class="admin-convenience-tag-builder" style="margin-top: 2rem;">
