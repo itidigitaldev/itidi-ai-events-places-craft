@@ -59,6 +59,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'webhookSecret' => $settings->webhookSecret,
         ]);
 
         if (!$saved) {
@@ -107,6 +108,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'webhookSecret' => $settings->webhookSecret,
         ]);
 
         return $this->asSuccess('Settings saved.', redirect: 'settings/plugins/craft-iti-plugin');
@@ -131,6 +133,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'webhookSecret' => $settings->webhookSecret,
         ]);
 
         return $this->asSuccess('Disconnected.', redirect: 'settings/plugins/craft-iti-plugin');

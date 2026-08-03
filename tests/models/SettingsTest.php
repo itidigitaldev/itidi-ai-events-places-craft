@@ -146,4 +146,11 @@ class SettingsTest extends TestCase
 
         $this->assertTrue($settings->hasErrors('canonicalUrlSource'));
     }
+
+    public function testWebhookSecretDefaultsToEmptyString(): void
+    {
+        $settings = new Settings();
+
+        $this->assertSame('', $settings->webhookSecret);
+    }
 }

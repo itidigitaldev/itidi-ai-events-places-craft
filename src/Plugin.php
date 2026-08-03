@@ -168,9 +168,15 @@ class Plugin extends BasePlugin
     {
         /** @var \craft\web\Controller $controller */
         $controller = Craft::$app->controller;
+        $settings = $this->getSettings();
+
+        if ($settings->webhookSecret === '' && !Craft::$app->getProjectConfig()->readOnly) {
+            $settings->webhookSecret = bin2hex(random_bytes(32));
+            Craft::$app->getPlugins()->savePluginSettings($this, $settings->toArray());
+        }
 
         return $controller->renderTemplate('craft-iti-plugin/settings', [
-            'settings' => $this->getSettings(),
+            'settings' => $settings,
         ]);
     }
 }

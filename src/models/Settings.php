@@ -18,6 +18,7 @@ class Settings extends Model
     public string $legacyEventIdParam = 'event_id';
     public string $legacyPlaceIdParam = 'place_id';
     public string $canonicalUrlSource = 'ssr';
+    public string $webhookSecret = '';
 
     protected function defineRules(): array
     {

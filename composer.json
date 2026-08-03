@@ -12,7 +12,8 @@
         "phpunit/phpunit": "^11.0"
     },
     "suggest": {
-        "nystudio107/craft-seomatic": "Adds the events/places sitemap to SEOmatic's sitemap index"
+        "nystudio107/craft-seomatic": "Adds the events/places sitemap to SEOmatic's sitemap index",
+        "putyourlightson/craft-blitz": "Enables cache purging for affected URLs when the plugin's cache-invalidation webhook is called"
     },
     "autoload": {
         "psr-4": {

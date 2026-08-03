@@ -134,6 +134,27 @@
                 ],
             }) }}
 
+            {{ forms.textField({
+                label: 'Webhook URL',
+                instructions: 'Configure this URL in the ITI Digital dashboard\'s webhook settings for this hub.',
+                id: 'webhookUrl',
+                value: siteUrl(craft.app.config.general.actionTrigger ~ '/craft-iti-plugin/webhook/purge-cache'),
+                disabled: true,
+            }) }}
+
+            {% set webhookSecretInstructions = 'Copy this value into the ITI Digital dashboard\'s webhook configuration for this hub. Used to authenticate incoming cache-invalidation/module-status webhook calls.' %}
+            {% if settings.webhookSecret == '' %}
+                {% set webhookSecretInstructions = webhookSecretInstructions ~ ' Not yet generated — this requires an environment where admin changes are allowed (CRAFT_ALLOW_ADMIN_CHANGES=true). Visit this screen there once, then deploy the resulting project config change.' %}
+            {% endif %}
+
+            {{ forms.textField({
+                label: 'Webhook Secret',
+                instructions: webhookSecretInstructions,
+                id: 'webhookSecret',
+                value: settings.webhookSecret,
+                disabled: true,
+            }) }}
+
             <div class="buttons">
                 <button type="submit" class="btn submit">{{ 'Save' }}</button>
             </div>
