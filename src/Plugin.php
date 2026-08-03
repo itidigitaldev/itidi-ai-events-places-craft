@@ -83,6 +83,17 @@ class Plugin extends BasePlugin
                 $event->rules['e/<id:[^\/]+>'] = 'craft-iti-plugin/detail/event';
                 $event->rules['p/<id:[^\/]+>'] = 'craft-iti-plugin/detail/place';
                 $event->rules['sitemap-events-places.xml'] = 'craft-iti-plugin/sitemap/index';
+
+                $settings = $this->getSettings();
+                // Settings can reach here unvalidated via a config/craft-iti-plugin.php override, which
+                // bypasses Settings::validate()'s empty-value fallback - guard here too, since an empty
+                // segment would compile into a rule matching every single-segment path on the site.
+                $eventRoute = $settings->singleEventRoute ?: 'event';
+                $placeRoute = $settings->singlePlaceRoute ?: 'place';
+                // ??=, not =: a configured route that collides with one of the fixed routes above must
+                // leave the existing rule intact rather than overwrite it.
+                $event->rules[$eventRoute . '/<id:[^\/]+>'] ??= 'craft-iti-plugin/detail/event';
+                $event->rules[$placeRoute . '/<id:[^\/]+>'] ??= 'craft-iti-plugin/detail/place';
             }
         );
 

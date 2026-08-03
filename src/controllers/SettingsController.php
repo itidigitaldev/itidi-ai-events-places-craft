@@ -55,6 +55,8 @@ class SettingsController extends Controller
             'enablePlaces' => false,
             'enableEventSubmissionForm' => false,
             'enablePlaceSubmissionForm' => false,
+            'singleEventRoute' => $settings->singleEventRoute,
+            'singlePlaceRoute' => $settings->singlePlaceRoute,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -94,8 +96,10 @@ class SettingsController extends Controller
         $settings->legacyEventIdParam = trim((string) $this->request->getBodyParam('legacyEventIdParam', 'event_id'));
         $settings->legacyPlaceIdParam = trim((string) $this->request->getBodyParam('legacyPlaceIdParam', 'place_id'));
         $settings->canonicalUrlSource = trim((string) $this->request->getBodyParam('canonicalUrlSource', 'ssr'));
+        $settings->singleEventRoute = trim((string) $this->request->getBodyParam('singleEventRoute', 'event'));
+        $settings->singlePlaceRoute = trim((string) $this->request->getBodyParam('singlePlaceRoute', 'place'));
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource'])) {
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'singleEventRoute', 'singlePlaceRoute'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -108,6 +112,8 @@ class SettingsController extends Controller
             'enablePlaces' => $settings->enablePlaces,
             'enableEventSubmissionForm' => $settings->enableEventSubmissionForm,
             'enablePlaceSubmissionForm' => $settings->enablePlaceSubmissionForm,
+            'singleEventRoute' => $settings->singleEventRoute,
+            'singlePlaceRoute' => $settings->singlePlaceRoute,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -135,6 +141,8 @@ class SettingsController extends Controller
             'enablePlaces' => false,
             'enableEventSubmissionForm' => false,
             'enablePlaceSubmissionForm' => false,
+            'singleEventRoute' => $settings->singleEventRoute,
+            'singlePlaceRoute' => $settings->singlePlaceRoute,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,

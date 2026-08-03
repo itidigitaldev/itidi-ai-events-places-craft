@@ -161,4 +161,12 @@ class SettingsTest extends TestCase
 
         $this->assertSame('', $settings->webhookSecret);
     }
+
+    public function testSingleItemRoutesDefaultToEventAndPlace(): void
+    {
+        $settings = new Settings();
+
+        $this->assertSame('event', $settings->singleEventRoute);
+        $this->assertSame('place', $settings->singlePlaceRoute);
+    }
 }
