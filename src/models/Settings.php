@@ -19,6 +19,8 @@ class Settings extends Model
     public string $legacyPlaceIdParam = 'place_id';
     public string $canonicalUrlSource = 'ssr';
     public string $webhookSecret = '';
+    public bool $enableEventSubmissionForm = false;
+    public bool $enablePlaceSubmissionForm = false;
 
     protected function defineRules(): array
     {
