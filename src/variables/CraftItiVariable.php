@@ -107,7 +107,8 @@ class CraftItiVariable
             Craft::$app->getResponse()->setStatusCode($e->statusCode);
 
             $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail-not-found', [
-                'message' => $e->getMessage(),
+                'title' => $e->getMessage(),
+                'message' => $e->bodyMessage,
             ]);
 
             return ['html' => $html, 'seo' => null];
