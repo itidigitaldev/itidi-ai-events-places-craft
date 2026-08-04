@@ -169,4 +169,48 @@ class SettingsTest extends TestCase
         $this->assertSame('event', $settings->singleEventRoute);
         $this->assertSame('place', $settings->singlePlaceRoute);
     }
+
+    public function testListingLimitsDefaultToCeilings(): void
+    {
+        $settings = new Settings();
+
+        $this->assertSame(100, $settings->eventListingLimit);
+        $this->assertSame(50, $settings->placeListingLimit);
+    }
+
+    public function testListingLimitsClampToCeilingWhenTooHigh(): void
+    {
+        $settings = new Settings();
+        $settings->eventListingLimit = 500;
+        $settings->placeListingLimit = 500;
+
+        $settings->validate(['eventListingLimit', 'placeListingLimit']);
+
+        $this->assertSame(100, $settings->eventListingLimit);
+        $this->assertSame(50, $settings->placeListingLimit);
+    }
+
+    public function testListingLimitsFallBackToCeilingWhenZeroOrNegative(): void
+    {
+        $settings = new Settings();
+        $settings->eventListingLimit = 0;
+        $settings->placeListingLimit = -5;
+
+        $settings->validate(['eventListingLimit', 'placeListingLimit']);
+
+        $this->assertSame(100, $settings->eventListingLimit);
+        $this->assertSame(50, $settings->placeListingLimit);
+    }
+
+    public function testListingLimitsPassThroughUnchangedWhenInRange(): void
+    {
+        $settings = new Settings();
+        $settings->eventListingLimit = 25;
+        $settings->placeListingLimit = 10;
+
+        $settings->validate(['eventListingLimit', 'placeListingLimit']);
+
+        $this->assertSame(25, $settings->eventListingLimit);
+        $this->assertSame(10, $settings->placeListingLimit);
+    }
 }

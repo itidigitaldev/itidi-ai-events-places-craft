@@ -57,6 +57,8 @@ class SettingsController extends Controller
             'enablePlaceSubmissionForm' => false,
             'singleEventRoute' => $settings->singleEventRoute,
             'singlePlaceRoute' => $settings->singlePlaceRoute,
+            'eventListingLimit' => $settings->eventListingLimit,
+            'placeListingLimit' => $settings->placeListingLimit,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -98,8 +100,10 @@ class SettingsController extends Controller
         $settings->canonicalUrlSource = trim((string) $this->request->getBodyParam('canonicalUrlSource', 'ssr'));
         $settings->singleEventRoute = trim((string) $this->request->getBodyParam('singleEventRoute', 'event'));
         $settings->singlePlaceRoute = trim((string) $this->request->getBodyParam('singlePlaceRoute', 'place'));
+        $settings->eventListingLimit = (int) $this->request->getBodyParam('eventListingLimit', 100);
+        $settings->placeListingLimit = (int) $this->request->getBodyParam('placeListingLimit', 50);
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'singleEventRoute', 'singlePlaceRoute'])) {
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -114,6 +118,8 @@ class SettingsController extends Controller
             'enablePlaceSubmissionForm' => $settings->enablePlaceSubmissionForm,
             'singleEventRoute' => $settings->singleEventRoute,
             'singlePlaceRoute' => $settings->singlePlaceRoute,
+            'eventListingLimit' => $settings->eventListingLimit,
+            'placeListingLimit' => $settings->placeListingLimit,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,
@@ -143,6 +149,8 @@ class SettingsController extends Controller
             'enablePlaceSubmissionForm' => false,
             'singleEventRoute' => $settings->singleEventRoute,
             'singlePlaceRoute' => $settings->singlePlaceRoute,
+            'eventListingLimit' => $settings->eventListingLimit,
+            'placeListingLimit' => $settings->placeListingLimit,
             'enableLegacyRedirects' => $settings->enableLegacyRedirects,
             'eventsListingUrl' => $settings->eventsListingUrl,
             'placesListingUrl' => $settings->placesListingUrl,

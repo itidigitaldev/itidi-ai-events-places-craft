@@ -164,6 +164,30 @@
                 errors: settings.getErrors('singlePlaceRoute'),
             }) }}
 
+            {{ forms.textField({
+                label: 'Event Listing Limit',
+                instructions: 'Default number of events to request for listing pages when no per-call limit is set. Maximum allowed value is 100 - this doesn\'t change what a per-call limit filter can still request.',
+                id: 'eventListingLimit',
+                name: 'eventListingLimit',
+                type: 'number',
+                min: 1,
+                max: 100,
+                value: settings.eventListingLimit,
+                errors: settings.getErrors('eventListingLimit'),
+            }) }}
+
+            {{ forms.textField({
+                label: 'Place Listing Limit',
+                instructions: 'Default number of places to request for listing pages when no per-call limit is set. Maximum allowed value is 50 - this doesn\'t change what a per-call limit filter can still request.',
+                id: 'placeListingLimit',
+                name: 'placeListingLimit',
+                type: 'number',
+                min: 1,
+                max: 50,
+                value: settings.placeListingLimit,
+                errors: settings.getErrors('placeListingLimit'),
+            }) }}
+
             {{ forms.selectField({
                 label: 'Canonical URL Source',
                 instructions: 'Where the canonical tag on event/place detail pages comes from. SSR Response reuses data already fetched for the page (fast, recommended). Sitemap Feed calls a separate, larger endpoint fresh on every single page load, with no caching — only enable this if ITI Digital has told you to.',
@@ -235,7 +259,7 @@
         <pre><code>{{ '{{ craft.craftIti.placesList() }}' }}</code></pre>
         <p class="light">Renders the places listing widget.</p>
 
-        <p class="light">Both accept an optional filters array (<code>listingBaseUrl</code>, <code>detailBaseUrl</code>, <code>page</code>) if you need to override the defaults.</p>
+        <p class="light">Both accept an optional filters array (<code>listingBaseUrl</code>, <code>detailBaseUrl</code>, <code>page</code>, <code>limit</code>) if you need to override the defaults. With no <code>limit</code> given, each listing uses the Event/Place Listing Limit configured above.</p>
 
         <h4>Detail pages</h4>
         <pre><code>{{ '{{ craft.craftIti.eventDetail(id) }}' }}</code></pre>
@@ -316,7 +340,7 @@
                 </div>
             </fieldset>
 
-            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="up to 100" min="1" max="100"></label></p>
+            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="{{ settings.eventListingLimit }}" min="1" max="100"></label></p>
         </div>
 
         <div id="craftItiTagBuilderPlaces" class="craft-iti-tag-builder-panel" hidden>
@@ -326,7 +350,7 @@
             <p><label>Custom category ID <input type="text" data-filter-key="customCategoryId" data-filter-type="string"></label></p>
             <p><label>Favorite listing ID <input type="text" data-filter-key="favListingId" data-filter-type="string"></label></p>
             <p><label>Location group ID <input type="text" data-filter-key="locationGroupId" data-filter-type="string"></label></p>
-            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="up to 50" min="1" max="50"></label></p>
+            <p><label>Limit <input type="number" data-filter-key="limit" data-filter-type="int" placeholder="{{ settings.placeListingLimit }}" min="1" max="50"></label></p>
         </div>
 
         <div class="buttons">

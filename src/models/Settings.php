@@ -24,6 +24,8 @@ class Settings extends Model
     public bool $enablePlaceSubmissionForm = false;
     public string $singleEventRoute = 'event';
     public string $singlePlaceRoute = 'place';
+    public int $eventListingLimit = 100;
+    public int $placeListingLimit = 50;
 
     protected function defineRules(): array
     {
@@ -34,6 +36,8 @@ class Settings extends Model
             [['singleEventRoute', 'singlePlaceRoute'], 'filter', 'filter' => fn(string $value): string => self::slugify($value)],
             [['singleEventRoute'], 'default', 'value' => 'event'],
             [['singlePlaceRoute'], 'default', 'value' => 'place'],
+            [['eventListingLimit'], 'filter', 'filter' => fn(int $value): int => self::clampListingLimit($value, 100)],
+            [['placeListingLimit'], 'filter', 'filter' => fn(int $value): int => self::clampListingLimit($value, 50)],
         ];
     }
 
@@ -48,5 +52,19 @@ class Settings extends Model
         }
 
         return ElementHelper::generateSlug($value);
+    }
+
+    /**
+     * Matches WordPress's own absint() -> "< 1 becomes the ceiling" -> min() chain exactly:
+     * an invalid, empty, zero, or negative value silently falls back to the ceiling; an
+     * in-range-but-too-high value clamps to it. No validation error is ever shown for either case.
+     */
+    private static function clampListingLimit(int $value, int $ceiling): int
+    {
+        if ($value < 1) {
+            return $ceiling;
+        }
+
+        return min($value, $ceiling);
     }
 }

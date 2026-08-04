@@ -194,6 +194,8 @@ class CraftItiVariable
 
         $page = $filters['page'] ?? 1;
 
+        $filters['limit'] ??= $type === 'events' ? $settings->eventListingLimit : $settings->placeListingLimit;
+
         $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
 
         try {
