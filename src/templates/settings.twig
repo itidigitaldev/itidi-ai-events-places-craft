@@ -221,6 +221,20 @@
                 disabled: true,
             }) }}
 
+            {% if settings.enableEvents or settings.enablePlaces %}
+                {% set sitemapInstructions = craft.app.plugins.isPluginEnabled('seomatic')
+                    ? 'Automatically included in your SEOmatic sitemap index.'
+                    : 'Submit this URL in Google Search Console, Bing Webmaster Tools, or your SEO plugin\'s sitemap settings.' %}
+
+                {{ forms.textField({
+                    label: 'Sitemap URL',
+                    instructions: sitemapInstructions,
+                    id: 'sitemapUrl',
+                    value: siteUrl('sitemap-events-places.xml'),
+                    disabled: true,
+                }) }}
+            {% endif %}
+
             <div class="buttons">
                 <button type="submit" class="btn submit">{{ 'Save' }}</button>
             </div>
