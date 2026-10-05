@@ -42,6 +42,7 @@ class ModuleStatusApi extends Component
         return [
             'events' => !empty($data['modules']['events']),
             'places' => !empty($data['modules']['places']),
+            'itineraries' => !empty($data['modules']['itineraries']),
         ];
     }
 }

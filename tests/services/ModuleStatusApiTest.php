@@ -26,12 +26,34 @@ class ModuleStatusApiTest extends TestCase
     public function testSuccessfulResponseReturnsModuleFlags(): void
     {
         $api = $this->apiWithMockedResponses([
-            new Response(200, [], json_encode(['modules' => ['events' => true, 'places' => false]])),
+            new Response(200, [], json_encode(['modules' => ['events' => true, 'places' => false, 'itineraries' => true]])),
         ]);
 
         $result = $api->fetchModuleStatus('demo-hub', 'real-key');
 
-        $this->assertSame(['events' => true, 'places' => false], $result);
+        $this->assertSame(['events' => true, 'places' => false, 'itineraries' => true], $result);
+    }
+
+    public function testMissingItinerariesFlagReportsUnavailable(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['modules' => ['events' => true, 'places' => true]])),
+        ]);
+
+        $result = $api->fetchModuleStatus('demo-hub', 'real-key');
+
+        $this->assertFalse($result['itineraries']);
+    }
+
+    public function testFalseItinerariesFlagReportsUnavailable(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['modules' => ['events' => true, 'itineraries' => false]])),
+        ]);
+
+        $result = $api->fetchModuleStatus('demo-hub', 'real-key');
+
+        $this->assertFalse($result['itineraries']);
     }
 
     public function testNetworkFailureThrowsConnectionMessage(): void

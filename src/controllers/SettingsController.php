@@ -67,6 +67,16 @@ class SettingsController extends Controller
             'canonicalUrlSource' => $settings->canonicalUrlSource,
             'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
+            'enableItineraries' => false,
+            'itineraryListingEntryIds' => $settings->itineraryListingEntryIds,
+            'itineraryDetailEntryIds' => $settings->itineraryDetailEntryIds,
+            'itineraryDefaultWidgetCode' => $settings->itineraryDefaultWidgetCode,
+            'enableLlmsTxt' => $settings->enableLlmsTxt,
+            'llmsDestinationName' => $settings->llmsDestinationName,
+            'llmsOrganizationName' => $settings->llmsOrganizationName,
+            'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
+            'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
+            'llmsAppendToExisting' => $settings->llmsAppendToExisting,
         ]);
 
         if (!$saved) {
@@ -104,8 +114,34 @@ class SettingsController extends Controller
         $settings->singlePlaceRoute = trim((string) $this->request->getBodyParam('singlePlaceRoute', 'place'));
         $settings->eventListingLimit = (int) $this->request->getBodyParam('eventListingLimit', 100);
         $settings->placeListingLimit = (int) $this->request->getBodyParam('placeListingLimit', 50);
+        $settings->enableItineraries = (bool) $this->request->getBodyParam('enableItineraries', false) && !empty($settings->moduleStatus['itineraries']);
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'sitemapTrailingSlash', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit'])) {
+        // The CP only renders these three inputs when the Itineraries section is visible
+        // (moduleStatus['itineraries'] true) - if the hub's module flag flips off and an
+        // admin saves some other setting, the form won't post them at all. Only read them
+        // here when the section could actually have been on the submitted form, otherwise
+        // leave the previously saved values untouched instead of wiping them to empty/default.
+        if (!empty($settings->moduleStatus['itineraries'])) {
+            $settings->itineraryListingEntryIds = (array) $this->request->getBodyParam('itineraryListingEntryIds', []);
+            $settings->itineraryDetailEntryIds = (array) $this->request->getBodyParam('itineraryDetailEntryIds', []);
+            $settings->itineraryDefaultWidgetCode = (string) $this->request->getBodyParam('itineraryDefaultWidgetCode', 'default');
+        }
+
+        $settings->enableLlmsTxt = (bool) $this->request->getBodyParam('enableLlmsTxt', false);
+        $settings->llmsDestinationName = (string) $this->request->getBodyParam('llmsDestinationName', '');
+        $settings->llmsOrganizationName = (string) $this->request->getBodyParam('llmsOrganizationName', '');
+        $settings->llmsAppendToExisting = (bool) $this->request->getBodyParam('llmsAppendToExisting', false);
+
+        // Each picker is only rendered while its module is available - don't wipe a saved
+        // list just because the hub has temporarily turned that module off.
+        if (!empty($settings->moduleStatus['events'])) {
+            $settings->llmsEventsEntryIds = (array) $this->request->getBodyParam('llmsEventsEntryIds', []);
+        }
+        if (!empty($settings->moduleStatus['places'])) {
+            $settings->llmsPlacesEntryIds = (array) $this->request->getBodyParam('llmsPlacesEntryIds', []);
+        }
+
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'sitemapTrailingSlash', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit', 'itineraryDefaultWidgetCode', 'itineraryListingEntryIds', 'itineraryDetailEntryIds', 'llmsDestinationName', 'llmsOrganizationName', 'llmsEventsEntryIds', 'llmsPlacesEntryIds'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -130,6 +166,16 @@ class SettingsController extends Controller
             'canonicalUrlSource' => $settings->canonicalUrlSource,
             'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
+            'enableItineraries' => $settings->enableItineraries,
+            'itineraryListingEntryIds' => $settings->itineraryListingEntryIds,
+            'itineraryDetailEntryIds' => $settings->itineraryDetailEntryIds,
+            'itineraryDefaultWidgetCode' => $settings->itineraryDefaultWidgetCode,
+            'enableLlmsTxt' => $settings->enableLlmsTxt,
+            'llmsDestinationName' => $settings->llmsDestinationName,
+            'llmsOrganizationName' => $settings->llmsOrganizationName,
+            'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
+            'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
+            'llmsAppendToExisting' => $settings->llmsAppendToExisting,
         ]);
 
         return $this->asSuccess('Settings saved.', redirect: 'settings/plugins/craft-iti-plugin');
@@ -145,7 +191,7 @@ class SettingsController extends Controller
             'hubname' => '',
             'apiKey' => '',
             'isConnected' => false,
-            'moduleStatus' => ['events' => false, 'places' => false],
+            'moduleStatus' => ['events' => false, 'places' => false, 'itineraries' => false],
             'enableEvents' => false,
             'enablePlaces' => false,
             'enableEventSubmissionForm' => false,
@@ -162,6 +208,16 @@ class SettingsController extends Controller
             'canonicalUrlSource' => $settings->canonicalUrlSource,
             'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
+            'enableItineraries' => false,
+            'itineraryListingEntryIds' => $settings->itineraryListingEntryIds,
+            'itineraryDetailEntryIds' => $settings->itineraryDetailEntryIds,
+            'itineraryDefaultWidgetCode' => $settings->itineraryDefaultWidgetCode,
+            'enableLlmsTxt' => $settings->enableLlmsTxt,
+            'llmsDestinationName' => $settings->llmsDestinationName,
+            'llmsOrganizationName' => $settings->llmsOrganizationName,
+            'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
+            'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
+            'llmsAppendToExisting' => $settings->llmsAppendToExisting,
         ]);
 
         return $this->asSuccess('Disconnected.', redirect: 'settings/plugins/craft-iti-plugin');

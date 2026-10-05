@@ -104,4 +104,37 @@ class CachePurgerTest extends TestCase
     {
         $this->assertFalse(CachePurger::isSameOrigin('https://example.com.evil.net/e/sample-event-abc123', 'https://example.com'));
     }
+
+    public function testResolveItineraryUrlsReturnsEntryUrls(): void
+    {
+        $urls = CachePurger::resolveItineraryUrls(['https://example.com/trips/', 'https://example.com/plan'], '', 'https://example.com');
+
+        $this->assertSame(['https://example.com/trips', 'https://example.com/plan'], $urls);
+    }
+
+    public function testResolveItineraryUrlsAddsSameOriginPayloadUrl(): void
+    {
+        $urls = CachePurger::resolveItineraryUrls(['https://example.com/trips'], 'https://example.com/weekend', 'https://example.com');
+
+        $this->assertSame(['https://example.com/trips', 'https://example.com/weekend'], $urls);
+    }
+
+    public function testResolveItineraryUrlsIgnoresForeignPayloadUrl(): void
+    {
+        $urls = CachePurger::resolveItineraryUrls(['https://example.com/trips'], 'https://evil.example.org/x', 'https://example.com');
+
+        $this->assertSame(['https://example.com/trips'], $urls);
+    }
+
+    public function testResolveItineraryUrlsDedupesAndSkipsEmpty(): void
+    {
+        $urls = CachePurger::resolveItineraryUrls(['https://example.com/trips', '', null, 'https://example.com/trips/'], 'https://example.com/trips', 'https://example.com');
+
+        $this->assertSame(['https://example.com/trips'], $urls);
+    }
+
+    public function testResolveItineraryUrlsWithNothingConfigured(): void
+    {
+        $this->assertSame([], CachePurger::resolveItineraryUrls([], '', 'https://example.com'));
+    }
 }

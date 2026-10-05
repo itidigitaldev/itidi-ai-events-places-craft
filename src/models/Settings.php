@@ -10,7 +10,7 @@ class Settings extends Model
     public string $hubname = '';
     public string $apiKey = '';
     public bool $isConnected = false;
-    public array $moduleStatus = ['events' => false, 'places' => false];
+    public array $moduleStatus = ['events' => false, 'places' => false, 'itineraries' => false];
     public bool $enableEvents = false;
     public bool $enablePlaces = false;
     public bool $enableLegacyRedirects = false;
@@ -27,6 +27,16 @@ class Settings extends Model
     public string $singlePlaceRoute = 'place';
     public int $eventListingLimit = 100;
     public int $placeListingLimit = 50;
+    public bool $enableItineraries = false;
+    public array $itineraryListingEntryIds = [];
+    public array $itineraryDetailEntryIds = [];
+    public string $itineraryDefaultWidgetCode = 'default';
+    public bool $enableLlmsTxt = false;
+    public string $llmsDestinationName = '';
+    public string $llmsOrganizationName = '';
+    public array $llmsEventsEntryIds = [];
+    public array $llmsPlacesEntryIds = [];
+    public bool $llmsAppendToExisting = false;
 
     protected function defineRules(): array
     {
@@ -40,6 +50,14 @@ class Settings extends Model
             [['singlePlaceRoute'], 'default', 'value' => 'place'],
             [['eventListingLimit'], 'filter', 'filter' => fn(int $value): int => self::clampListingLimit($value, 100)],
             [['placeListingLimit'], 'filter', 'filter' => fn(int $value): int => self::clampListingLimit($value, 50)],
+            [['itineraryDefaultWidgetCode'], 'trim'],
+            [['itineraryDefaultWidgetCode'], 'default', 'value' => 'default'],
+            [['itineraryDefaultWidgetCode'], 'string', 'max' => 100],
+            [['itineraryDefaultWidgetCode'], 'match', 'pattern' => '/^[A-Za-z0-9_-]+$/', 'message' => 'Widget code may only contain letters, numbers, hyphens and underscores.'],
+            [['itineraryListingEntryIds', 'itineraryDetailEntryIds'], 'filter', 'filter' => fn($value): array => self::normalizeEntryIds($value), 'skipOnArray' => false],
+            [['llmsDestinationName', 'llmsOrganizationName'], 'trim'],
+            [['llmsDestinationName', 'llmsOrganizationName'], 'string', 'max' => 255],
+            [['llmsEventsEntryIds', 'llmsPlacesEntryIds'], 'filter', 'filter' => fn($value): array => self::normalizeEntryIds($value), 'skipOnArray' => false],
         ];
     }
 
@@ -54,6 +72,31 @@ class Settings extends Model
         }
 
         return ElementHelper::generateSlug($value);
+    }
+
+    /**
+     * Craft's element select field posts an array of id strings, or '' when nothing is
+     * picked - collapse either into a clean list of unique positive entry ids.
+     */
+    public static function normalizeEntryIds(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $ids = [];
+
+        foreach ($value as $id) {
+            if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+                $id = (int) $id;
+
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /**

@@ -1,4 +1,5 @@
 <div id="{{ containerId }}">{{ sanitizedHtml|raw }}</div>
+{% if initMethod %}
 <script>
   window.itidiAiListingInit = window.itidiAiListingInit || { instances: [] };
   window.itidiAiListingInit.instances.push({
@@ -7,6 +8,7 @@
     bootstrap: {{ bootstrap|json_encode|raw }}
   });
 </script>
+{% endif %}
 
 {% if structuredData is not empty %}
     <script type="application/ld+json">{{ structuredData|json_encode|raw }}</script>

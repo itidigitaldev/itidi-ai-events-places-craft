@@ -139,7 +139,7 @@ abstract class AbstractContentApi extends Component
         return trim((string) end($segments), '/');
     }
 
-    private function request(string $hubname, string $resolvedApiKey, string $route, array $queryArgs): array
+    protected function request(string $hubname, string $resolvedApiKey, string $route, array $queryArgs): array
     {
         $response = $this->sendRequest($hubname, $resolvedApiKey, $route, $queryArgs, throwOnError: true);
 

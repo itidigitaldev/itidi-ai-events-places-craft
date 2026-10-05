@@ -32,6 +32,27 @@ final class CachePurger
         return array_values(array_unique($urls));
     }
 
+    /**
+     * Itineraries have no clean detail routes of their own - they live on whichever
+     * entries the admin picked in the CP, so those entries' URLs are what get purged.
+     */
+    public static function resolveItineraryUrls(array $entryUrls, string $payloadUrl, string $siteBaseUrl): array
+    {
+        $urls = [];
+
+        foreach ($entryUrls as $url) {
+            if (is_string($url) && $url !== '') {
+                $urls[] = rtrim($url, '/');
+            }
+        }
+
+        if ($payloadUrl !== '' && self::isSameOrigin($payloadUrl, $siteBaseUrl)) {
+            $urls[] = rtrim($payloadUrl, '/');
+        }
+
+        return array_values(array_unique($urls));
+    }
+
     public static function isSameOrigin(string $url, string $siteBaseUrl): bool
     {
         $siteBaseUrl = rtrim($siteBaseUrl, '/');

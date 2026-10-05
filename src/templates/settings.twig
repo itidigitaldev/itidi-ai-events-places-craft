@@ -80,6 +80,126 @@
                 <p class="light">{{ 'Places: not available on this hub.' }}</p>
             {% endif %}
 
+            {% if settings.moduleStatus['itineraries'] ?? false %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Itineraries',
+                    instructions: 'Allow craft.craftIti.itinerariesList() and craft.craftIti.itineraryDetail() to render itinerary content.',
+                    id: 'enableItineraries',
+                    name: 'enableItineraries',
+                    on: settings.enableItineraries,
+                }) }}
+
+                {{ forms.elementSelectField({
+                    label: 'Itinerary listing entries',
+                    instructions: 'Entries whose template renders craft.craftIti.itinerariesList(). Their cache is refreshed when the hub reports itinerary listing changes.',
+                    id: 'itineraryListingEntryIds',
+                    name: 'itineraryListingEntryIds',
+                    elementType: 'craft\\elements\\Entry',
+                    elements: itineraryListingEntries ?? [],
+                }) }}
+
+                {{ forms.elementSelectField({
+                    label: 'Itinerary detail entries',
+                    instructions: 'Entries whose template renders craft.craftIti.itineraryDetail(). Their cache is refreshed when the hub reports an itinerary change.',
+                    id: 'itineraryDetailEntryIds',
+                    name: 'itineraryDetailEntryIds',
+                    elementType: 'craft\\elements\\Entry',
+                    elements: itineraryDetailEntries ?? [],
+                }) }}
+
+                {{ forms.textField({
+                    label: 'Default itinerary widget code',
+                    instructions: 'Used by craft.craftIti.itinerariesList() when the template doesn\'t pass a widgetCode.',
+                    id: 'itineraryDefaultWidgetCode',
+                    name: 'itineraryDefaultWidgetCode',
+                    value: settings.itineraryDefaultWidgetCode,
+                    errors: settings.getErrors('itineraryDefaultWidgetCode'),
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Itineraries: not available on this hub.' }}</p>
+            {% endif %}
+
+            <hr>
+            <h2>llms.txt</h2>
+
+            {{ forms.lightswitchField({
+                label: 'Enable llms.txt',
+                instructions: 'Publish an llms.txt file in the web root that points AI crawlers to this site\'s official Events and Places pages and sitemap.',
+                id: 'enableLlmsTxt',
+                name: 'enableLlmsTxt',
+                on: settings.enableLlmsTxt,
+            }) }}
+
+            {{ forms.textField({
+                label: 'Destination name',
+                instructions: 'Shown as the llms.txt title. Leave blank to use the site name.',
+                id: 'llmsDestinationName',
+                name: 'llmsDestinationName',
+                value: settings.llmsDestinationName,
+                placeholder: currentSite.name,
+                errors: settings.getErrors('llmsDestinationName'),
+            }) }}
+
+            {{ forms.textField({
+                label: 'Organization name',
+                instructions: 'Who maintains this information. Leave blank to use the destination name.',
+                id: 'llmsOrganizationName',
+                name: 'llmsOrganizationName',
+                value: settings.llmsOrganizationName,
+                placeholder: 'Same as destination name',
+                errors: settings.getErrors('llmsOrganizationName'),
+            }) }}
+
+            {% if settings.moduleStatus['events'] ?? false %}
+                {{ forms.elementSelectField({
+                    label: 'Events pages',
+                    instructions: 'Pages that show craft.craftIti.eventsList(). They\'re linked from llms.txt.',
+                    id: 'llmsEventsEntryIds',
+                    name: 'llmsEventsEntryIds',
+                    elementType: 'craft\\elements\\Entry',
+                    elements: llmsEventsEntries ?? [],
+                }) }}
+            {% endif %}
+
+            {% if settings.moduleStatus['places'] ?? false %}
+                {{ forms.elementSelectField({
+                    label: 'Places pages',
+                    instructions: 'Pages that show craft.craftIti.placesList(). They\'re linked from llms.txt.',
+                    id: 'llmsPlacesEntryIds',
+                    name: 'llmsPlacesEntryIds',
+                    elementType: 'craft\\elements\\Entry',
+                    elements: llmsPlacesEntries ?? [],
+                }) }}
+            {% endif %}
+
+            {{ forms.lightswitchField({
+                label: 'Append to an existing llms.txt',
+                instructions: 'If the site already has an llms.txt this plugin didn\'t create, add this plugin\'s section to the end of it. When off, an existing file is left alone.',
+                id: 'llmsAppendToExisting',
+                name: 'llmsAppendToExisting',
+                on: settings.llmsAppendToExisting,
+            }) }}
+
+            {% if llmsStatus %}
+                {% set llmsStateLabels = {
+                    generated: 'Generated by this plugin',
+                    appended: 'Appended to an existing file',
+                    conflict: 'Conflict: existing file not created by this plugin',
+                    dynamic: 'Served dynamically (no file in web root)',
+                    none: 'Not published (nothing to list)',
+                    unreadable: 'Existing llms.txt can\'t be read: check its permissions',
+                } %}
+                <div class="field">
+                    <div class="heading"><label>llms.txt status</label></div>
+                    <div class="input">
+                        <p><a href="{{ llmsStatus.url }}" target="_blank" rel="noopener">{{ llmsStatus.url }}</a></p>
+                        <p>{{ llmsStateLabels[llmsStatus.state] }}{% if llmsStatus.lastGenerated %} · Last generated {{ llmsStatus.lastGenerated|datetime('short') }}{% endif %}</p>
+                        {% if llmsStatus.lastError %}<p class="error">{{ llmsStatus.lastError }}</p>{% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            <hr>
+
             {% if settings.moduleStatus['events'] %}
                 {{ forms.lightswitchField({
                     label: 'Enable Event Submission Form',
@@ -298,6 +418,13 @@
         <p class="light">
             Renders one place's detail content. Always reachable at <code>/p/{{ '<id>' }}</code>{% if placesBase %}, or nested under your configured listing at <code>{{ placesBase|trim('/', 'right') }}/p/{{ '<id>' }}</code>{% endif %}, or at your configured fallback route, <code>/{{ settings.singlePlaceRoute }}/{{ '<id>' }}</code>.
         </p>
+
+        <h4>Itineraries</h4>
+        <pre><code>{{ '{{ craft.craftIti.itinerariesList({ widgetCode: \'my-widget\' }) }}' }}</code></pre>
+        <p class="light">Renders the itineraries listing. <code>widgetCode</code> is optional; without it the Default itinerary widget code above is used.</p>
+
+        <pre><code>{{ '{{ craft.craftIti.itineraryDetail(entry.itineraryId) }}' }}</code></pre>
+        <p class="light">Renders one itinerary inside any page. Pass the itinerary id from a plain text field on the entry. It doesn't change the page's SEO tags.</p>
 
         <h4>Detail pages with SEO data</h4>
         <pre><code>{{ '{% set result = craft.craftIti.eventDetailWithSeo(id) %}' }}

@@ -3,6 +3,7 @@
 namespace iti\craftitiplugin\controllers;
 
 use Craft;
+use craft\elements\Entry;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use iti\craftitiplugin\Plugin;
@@ -57,7 +58,7 @@ class WebhookController extends Controller
         if (
             $event !== 'ssr_cache.invalidate'
             || !in_array($scope, ['detail', 'listing'], true)
-            || !in_array($type, ['event', 'place'], true)
+            || !in_array($type, ['event', 'place', 'itinerary'], true)
         ) {
             Craft::$app->getResponse()->setStatusCode(400);
             return $this->asJson(['success' => false, 'message' => 'Invalid webhook payload.']);
@@ -65,19 +66,28 @@ class WebhookController extends Controller
 
         $settings = Plugin::getInstance()->getSettings();
         $siteBaseUrl = rtrim(UrlHelper::siteUrl(), '/');
-        $listingUrl = $type === 'event' ? $settings->eventsListingUrl : $settings->placesListingUrl;
 
-        if ($scope === 'detail') {
-            $slug = $nameId !== '' ? $nameId : $this->lastUrlSegment($url);
-            $urls = $slug !== '' ? CachePurger::resolveDetailUrls($type, $slug, $siteBaseUrl, $listingUrl) : [];
-
-            if ($url !== '' && CachePurger::isSameOrigin($url, $siteBaseUrl)) {
-                $urls[] = $url;
-            }
-
-            $urls = array_values(array_unique($urls));
+        if ($type === 'itinerary') {
+            $entryIds = $scope === 'listing' ? $settings->itineraryListingEntryIds : $settings->itineraryDetailEntryIds;
+            $entryUrls = $entryIds
+                ? array_map(fn(Entry $entry) => $entry->getUrl(), Entry::find()->id($entryIds)->status(null)->all())
+                : [];
+            $urls = CachePurger::resolveItineraryUrls($entryUrls, $scope === 'detail' ? $url : '', $siteBaseUrl);
         } else {
-            $urls = CachePurger::resolveListingUrls($siteBaseUrl, $listingUrl);
+            $listingUrl = $type === 'event' ? $settings->eventsListingUrl : $settings->placesListingUrl;
+
+            if ($scope === 'detail') {
+                $slug = $nameId !== '' ? $nameId : $this->lastUrlSegment($url);
+                $urls = $slug !== '' ? CachePurger::resolveDetailUrls($type, $slug, $siteBaseUrl, $listingUrl) : [];
+
+                if ($url !== '' && CachePurger::isSameOrigin($url, $siteBaseUrl)) {
+                    $urls[] = $url;
+                }
+
+                $urls = array_values(array_unique($urls));
+            } else {
+                $urls = CachePurger::resolveListingUrls($siteBaseUrl, $listingUrl);
+            }
         }
 
         CachePurger::purgeUrls($urls);
@@ -118,6 +128,12 @@ class WebhookController extends Controller
             $settings->moduleStatus['places'] = $placesAvailable;
             $settings->enablePlaces = $placesAvailable;
             $settings->enablePlaceSubmissionForm = $settings->enablePlaceSubmissionForm && $placesAvailable;
+        }
+
+        if (array_key_exists('itineraries', $modules)) {
+            $itinerariesAvailable = (bool) $modules['itineraries'];
+            $settings->moduleStatus['itineraries'] = $itinerariesAvailable;
+            $settings->enableItineraries = $itinerariesAvailable;
         }
 
         try {

@@ -14,7 +14,7 @@ class SettingsTest extends TestCase
         $this->assertSame('', $settings->hubname);
         $this->assertSame('', $settings->apiKey);
         $this->assertFalse($settings->isConnected);
-        $this->assertSame(['events' => false, 'places' => false], $settings->moduleStatus);
+        $this->assertSame(['events' => false, 'places' => false, 'itineraries' => false], $settings->moduleStatus);
         $this->assertFalse($settings->enableEvents);
         $this->assertFalse($settings->enablePlaces);
     }
@@ -259,5 +259,118 @@ class SettingsTest extends TestCase
 
         $this->assertSame(25, $settings->eventListingLimit);
         $this->assertSame(10, $settings->placeListingLimit);
+    }
+
+    public function testItineraryDefaults(): void
+    {
+        $settings = new Settings();
+
+        $this->assertFalse($settings->enableItineraries);
+        $this->assertSame([], $settings->itineraryListingEntryIds);
+        $this->assertSame([], $settings->itineraryDetailEntryIds);
+        $this->assertSame('default', $settings->itineraryDefaultWidgetCode);
+    }
+
+    public function testEmptyItineraryWidgetCodeFallsBackToDefault(): void
+    {
+        $settings = new Settings();
+        $settings->itineraryDefaultWidgetCode = '   ';
+
+        $settings->validate(['itineraryDefaultWidgetCode']);
+
+        $this->assertFalse($settings->hasErrors('itineraryDefaultWidgetCode'));
+        $this->assertSame('default', $settings->itineraryDefaultWidgetCode);
+    }
+
+    public function testItineraryWidgetCodeIsTrimmed(): void
+    {
+        $settings = new Settings();
+        $settings->itineraryDefaultWidgetCode = '  summer_trips-2026 ';
+
+        $settings->validate(['itineraryDefaultWidgetCode']);
+
+        $this->assertFalse($settings->hasErrors('itineraryDefaultWidgetCode'));
+        $this->assertSame('summer_trips-2026', $settings->itineraryDefaultWidgetCode);
+    }
+
+    public function testItineraryWidgetCodeRejectsInvalidCharacters(): void
+    {
+        $settings = new Settings();
+        $settings->itineraryDefaultWidgetCode = 'bad code<script>';
+
+        $settings->validate(['itineraryDefaultWidgetCode']);
+
+        $this->assertTrue($settings->hasErrors('itineraryDefaultWidgetCode'));
+    }
+
+    public function testItineraryWidgetCodeRejectsOverLongValue(): void
+    {
+        $settings = new Settings();
+        $settings->itineraryDefaultWidgetCode = str_repeat('a', 101);
+
+        $settings->validate(['itineraryDefaultWidgetCode']);
+
+        $this->assertTrue($settings->hasErrors('itineraryDefaultWidgetCode'));
+    }
+
+    public function testNormalizeEntryIdsKeepsUniquePositiveInts(): void
+    {
+        $this->assertSame([3, 7], Settings::normalizeEntryIds(['3', 7, '7', '0', '-2', 'abc', '']));
+    }
+
+    public function testNormalizeEntryIdsTreatsNonArrayAsEmpty(): void
+    {
+        $this->assertSame([], Settings::normalizeEntryIds(''));
+        $this->assertSame([], Settings::normalizeEntryIds(null));
+    }
+
+    public function testEntryIdListsAreNormalizedOnValidate(): void
+    {
+        $settings = new Settings();
+        $settings->itineraryListingEntryIds = ['12', '12', '0'];
+        $settings->itineraryDetailEntryIds = ['5'];
+
+        $settings->validate(['itineraryListingEntryIds', 'itineraryDetailEntryIds']);
+
+        $this->assertSame([12], $settings->itineraryListingEntryIds);
+        $this->assertSame([5], $settings->itineraryDetailEntryIds);
+    }
+
+    public function testLlmsDefaults(): void
+    {
+        $settings = new Settings();
+
+        $this->assertFalse($settings->enableLlmsTxt);
+        $this->assertSame('', $settings->llmsDestinationName);
+        $this->assertSame('', $settings->llmsOrganizationName);
+        $this->assertSame([], $settings->llmsEventsEntryIds);
+        $this->assertSame([], $settings->llmsPlacesEntryIds);
+        $this->assertFalse($settings->llmsAppendToExisting);
+    }
+
+    public function testLlmsNamesAreTrimmedAndEntryIdsNormalized(): void
+    {
+        $settings = new Settings();
+        $settings->llmsDestinationName = '  Visit Savannah ';
+        $settings->llmsOrganizationName = ' Visit Savannah CVB  ';
+        $settings->llmsEventsEntryIds = ['4', '4', 'x'];
+        $settings->llmsPlacesEntryIds = [''];
+
+        $settings->validate(['llmsDestinationName', 'llmsOrganizationName', 'llmsEventsEntryIds', 'llmsPlacesEntryIds']);
+
+        $this->assertSame('Visit Savannah', $settings->llmsDestinationName);
+        $this->assertSame('Visit Savannah CVB', $settings->llmsOrganizationName);
+        $this->assertSame([4], $settings->llmsEventsEntryIds);
+        $this->assertSame([], $settings->llmsPlacesEntryIds);
+    }
+
+    public function testLlmsNamesRejectOverLongValues(): void
+    {
+        $settings = new Settings();
+        $settings->llmsDestinationName = str_repeat('a', 256);
+
+        $settings->validate(['llmsDestinationName']);
+
+        $this->assertTrue($settings->hasErrors('llmsDestinationName'));
     }
 }
