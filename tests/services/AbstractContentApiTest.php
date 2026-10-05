@@ -223,6 +223,107 @@ class AbstractContentApiTest extends TestCase
         $api->fetchDetail('demo-hub', 'real-key', '42');
     }
 
+    public function testFetchDetailMarksNotAvailableWhenHttpStatusIsNonTwoXxWithHtml(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(410, [], json_encode(['html' => '<p>this event has ended</p>'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertSame('<p>this event has ended</p>', $result['html']);
+        $this->assertTrue($result['notAvailable']);
+        $this->assertSame(499, $result['notAvailableStatusCode']);
+    }
+
+    public function testFetchDetailMarksNotAvailableWhenStatusFieldIsExpired(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>expired</p>', 'status' => 'expired'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertTrue($result['notAvailable']);
+    }
+
+    public function testFetchDetailMarksNotAvailableWhenStatusFieldIsMixedCaseNotFound(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>gone</p>', 'status' => 'Not_Found'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertTrue($result['notAvailable']);
+    }
+
+    public function testFetchDetailMarksNotAvailableWhenStatusFieldIsGone(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>gone</p>', 'status' => 'gone'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertTrue($result['notAvailable']);
+    }
+
+    public function testFetchDetailMarksNotAvailableWhenErrorFieldIndicatesEventNotFound(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>gone</p>', 'error' => 'Event not found'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertTrue($result['notAvailable']);
+    }
+
+    public function testFetchDetailDoesNotMarkNotAvailableOnNormalSuccess(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>detail</p>'])),
+        ]);
+
+        $result = $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        $this->assertArrayNotHasKey('notAvailable', $result);
+    }
+
+    public function testFetchDetailConvergesNonSuccessStatusWithoutHtmlToContentNotFoundException(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(500, [], json_encode(['message' => 'server error'])),
+        ]);
+
+        $this->expectException(ContentNotFoundException::class);
+
+        $api->fetchDetail('demo-hub', 'real-key', '42');
+    }
+
+    public function testFetchDetailConvergesMalformedJsonOnSuccessStatusToContentNotFoundException(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], 'not json'),
+        ]);
+
+        $this->expectException(ContentNotFoundException::class);
+
+        $api->fetchDetail('demo-hub', 'real-key', '42');
+    }
+
+    public function testFetchDetailConvergesMalformedJsonOnNonSuccessStatusToContentNotFoundException(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(500, [], 'not json'),
+        ]);
+
+        $this->expectException(ContentNotFoundException::class);
+
+        $api->fetchDetail('demo-hub', 'real-key', '42');
+    }
+
     public function testFetchDetailUrlIncludesTypeSegmentAndRoute(): void
     {
         $history = [];
@@ -264,6 +365,126 @@ class AbstractContentApiTest extends TestCase
 
         parse_str($history[0]['request']->getUri()->getQuery(), $query);
         $this->assertSame('6a251e6360e8033e32950389', $query['id']);
+    }
+
+    public function testFetchListingSendsTrailingSlashTrueWhenPropertySetToTrue(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>hi</p>'])),
+        ], $history);
+        $api->trailingSlash = true;
+
+        $api->fetchListing('demo-hub', 'real-key', [], 'https://example.com/', 'https://example.com/e/');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('true', $query['trailingSlash']);
+    }
+
+    public function testFetchListingOmitsTrailingSlashWhenPropertySetToFalse(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>hi</p>'])),
+        ], $history);
+        $api->trailingSlash = false;
+
+        $api->fetchListing('demo-hub', 'real-key', [], 'https://example.com/', 'https://example.com/e/');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertArrayNotHasKey('trailingSlash', $query);
+    }
+
+    public function testFetchListingOmitsTrailingSlashWhenPropertyLeftNull(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>hi</p>'])),
+        ], $history);
+
+        $api->fetchListing('demo-hub', 'real-key', [], 'https://example.com/', 'https://example.com/e/');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertArrayNotHasKey('trailingSlash', $query);
+    }
+
+    public function testFetchDetailSendsTrailingSlashTrueWhenPropertySetToTrue(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>detail</p>'])),
+        ], $history);
+        $api->trailingSlash = true;
+
+        $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('true', $query['trailingSlash']);
+    }
+
+    public function testFetchDetailOmitsTrailingSlashWhenPropertySetToFalse(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['html' => '<p>detail</p>'])),
+        ], $history);
+        $api->trailingSlash = false;
+
+        $api->fetchDetail('demo-hub', 'real-key', '42');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertArrayNotHasKey('trailingSlash', $query);
+    }
+
+    public function testSearchSendsTrailingSlashTrueWhenPropertySetToTrue(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Result']]])),
+        ], $history);
+        $api->cache = new ArrayCache();
+        $api->trailingSlash = true;
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('true', $query['trailingSlash']);
+    }
+
+    public function testSearchOmitsTrailingSlashWhenPropertySetToFalse(): void
+    {
+        $history = [];
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Result']]])),
+        ], $history);
+        $api->cache = new ArrayCache();
+        $api->trailingSlash = false;
+
+        $api->search('demo-hub', 'real-key', 'jazz');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertArrayNotHasKey('trailingSlash', $query);
+    }
+
+    public function testSearchCachesSeparatelyForDifferentTrailingSlashValues(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'With slash']]])),
+            new Response(200, [], json_encode(['stub-type' => [['title' => 'Without slash']]])),
+        ]));
+        $stack->push(Middleware::history($history));
+        $api = new StubContentApi(['httpClient' => new Client(['handler' => $stack])]);
+        $api->cache = new ArrayCache();
+
+        $api->trailingSlash = true;
+        $withSlash = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $api->trailingSlash = false;
+        $withoutSlash = $api->search('demo-hub', 'real-key', 'jazz');
+
+        $this->assertCount(2, $history);
+        $this->assertNotSame($withSlash, $withoutSlash);
     }
 
     public function testSearchUrlIncludesTypeSegmentAndSearchParams(): void

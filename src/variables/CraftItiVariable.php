@@ -125,6 +125,12 @@ class CraftItiVariable
             return ['html' => $html, 'seo' => null];
         }
 
+        $notAvailable = !empty($response['notAvailable']);
+
+        if ($notAvailable) {
+            Craft::$app->getResponse()->setStatusCode($response['notAvailableStatusCode'] ?? $this->notFoundStatusCode($type));
+        }
+
         $this->registerCssFiles($response['assets']['css'] ?? []);
         $this->registerJsFiles($response['assets']['js'] ?? []);
         Craft::$app->getView()->registerAssetBundle(
@@ -138,17 +144,23 @@ class CraftItiVariable
         $seo = $response['seo'] ?? [];
         $rawId = AbstractContentApi::extractRawId($id);
 
-        $canonicalSourceUrl = CanonicalUrlResolver::resolve(
-            $settings->canonicalUrlSource,
-            Plugin::getInstance()->sitemapApi,
-            $settings->hubname,
-            $settings->apiKey,
-            $api->sitemapType(),
-            $rawId,
-            $seo['canonicalUrl'] ?? null,
-        );
+        $seoData = null;
 
-        $seoData = SeoDataFactory::fromDetailResponse($seo, $currentUrl, $canonicalSourceUrl);
+        if (!$notAvailable) {
+            $canonicalSourceUrl = CanonicalUrlResolver::resolve(
+                $settings->canonicalUrlSource,
+                Plugin::getInstance()->sitemapApi,
+                $settings->hubname,
+                $settings->apiKey,
+                $api->sitemapType(),
+                $rawId,
+                $seo['canonicalUrl'] ?? null,
+                $settings->sitemapTrailingSlash,
+                Craft::$app->getConfig()->getGeneral()->addTrailingSlashesToUrls,
+            );
+
+            $seoData = SeoDataFactory::fromDetailResponse($seo, $currentUrl, $canonicalSourceUrl);
+        }
 
         $html = Craft::$app->getView()->renderTemplate('craft-iti-plugin/_partials/detail', [
             'sourceId' => $prefix . '-source-' . $uuid,
@@ -161,12 +173,21 @@ class CraftItiVariable
                 'itidi_type' => $type === 'events' ? 'event' : 'place',
                 'itidi_id' => $rawId,
                 'itidi_name_id' => $id,
-                'itidi_canonical_url' => $seoData->canonicalUrl,
+                'itidi_canonical_url' => $seoData->canonicalUrl ?? $currentUrl,
                 'itidi_visited_url' => $currentUrl,
             ],
         ]);
 
         return ['html' => $html, 'seo' => $seoData];
+    }
+
+    /**
+     * Fallback for the (should-never-happen) case where a "not available" marker comes
+     * back without the status code the service layer normally carries alongside it.
+     */
+    private function notFoundStatusCode(string $type): int
+    {
+        return $type === 'events' ? 410 : 404;
     }
 
     private function renderListing(string $type, array $filters): string

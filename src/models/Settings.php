@@ -19,6 +19,7 @@ class Settings extends Model
     public string $legacyEventIdParam = 'event_id';
     public string $legacyPlaceIdParam = 'place_id';
     public string $canonicalUrlSource = 'ssr';
+    public string $sitemapTrailingSlash = 'auto';
     public string $webhookSecret = '';
     public bool $enableEventSubmissionForm = false;
     public bool $enablePlaceSubmissionForm = false;
@@ -33,6 +34,7 @@ class Settings extends Model
             [['hubname', 'apiKey', 'eventsListingUrl', 'placesListingUrl', 'legacyEventIdParam', 'legacyPlaceIdParam'], 'trim'],
             [['eventsListingUrl', 'placesListingUrl'], 'required', 'when' => fn(Settings $model) => $model->enableLegacyRedirects],
             [['canonicalUrlSource'], 'in', 'range' => ['ssr', 'sitemap']],
+            [['sitemapTrailingSlash'], 'in', 'range' => ['auto', 'always', 'never']],
             [['singleEventRoute', 'singlePlaceRoute'], 'filter', 'filter' => fn(string $value): string => self::slugify($value)],
             [['singleEventRoute'], 'default', 'value' => 'event'],
             [['singlePlaceRoute'], 'default', 'value' => 'place'],

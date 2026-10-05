@@ -5,6 +5,7 @@ namespace iti\craftitiplugin\controllers;
 use Craft;
 use craft\web\Controller;
 use iti\craftitiplugin\errors\ContentApiException;
+use iti\craftitiplugin\helpers\SitemapUrlFormatter;
 use iti\craftitiplugin\Plugin;
 use iti\craftitiplugin\seo\SeoDataFactory;
 use yii\web\NotFoundHttpException;
@@ -34,6 +35,11 @@ class SitemapController extends Controller
         }
 
         $xml = SeoDataFactory::rewriteLocTags($xml, Craft::$app->getRequest()->getAbsoluteUrl());
+        $xml = SitemapUrlFormatter::rewriteLocTags(
+            $xml,
+            $settings->sitemapTrailingSlash,
+            Craft::$app->getConfig()->getGeneral()->addTrailingSlashesToUrls,
+        );
 
         $response = Craft::$app->getResponse();
         $response->format = Response::FORMAT_RAW;

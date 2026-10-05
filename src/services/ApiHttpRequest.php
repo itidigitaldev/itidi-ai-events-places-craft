@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class ApiHttpRequest
 {
-    public static function get(ClientInterface $client, string $url, array $query, string $acceptHeader): ResponseInterface
+    public static function get(ClientInterface $client, string $url, array $query, string $acceptHeader, bool $throwOnError = true): ResponseInterface
     {
         try {
             $response = $client->get($url, [
@@ -21,7 +21,7 @@ final class ApiHttpRequest
             throw new ContentApiException("Couldn't reach ITI Digital. Check your connection and try again.", 0, $e);
         }
 
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+        if ($throwOnError && ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300)) {
             throw new ContentApiException('ITI Digital returned an error response.');
         }
 

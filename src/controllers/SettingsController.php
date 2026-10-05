@@ -65,6 +65,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
         ]);
 
@@ -98,12 +99,13 @@ class SettingsController extends Controller
         $settings->legacyEventIdParam = trim((string) $this->request->getBodyParam('legacyEventIdParam', 'event_id'));
         $settings->legacyPlaceIdParam = trim((string) $this->request->getBodyParam('legacyPlaceIdParam', 'place_id'));
         $settings->canonicalUrlSource = trim((string) $this->request->getBodyParam('canonicalUrlSource', 'ssr'));
+        $settings->sitemapTrailingSlash = trim((string) $this->request->getBodyParam('sitemapTrailingSlash', 'auto'));
         $settings->singleEventRoute = trim((string) $this->request->getBodyParam('singleEventRoute', 'event'));
         $settings->singlePlaceRoute = trim((string) $this->request->getBodyParam('singlePlaceRoute', 'place'));
         $settings->eventListingLimit = (int) $this->request->getBodyParam('eventListingLimit', 100);
         $settings->placeListingLimit = (int) $this->request->getBodyParam('placeListingLimit', 50);
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit'])) {
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'sitemapTrailingSlash', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -126,6 +128,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
         ]);
 
@@ -157,6 +160,7 @@ class SettingsController extends Controller
             'legacyEventIdParam' => $settings->legacyEventIdParam,
             'legacyPlaceIdParam' => $settings->legacyPlaceIdParam,
             'canonicalUrlSource' => $settings->canonicalUrlSource,
+            'sitemapTrailingSlash' => $settings->sitemapTrailingSlash,
             'webhookSecret' => $settings->webhookSecret,
         ]);
 

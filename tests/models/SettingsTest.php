@@ -155,6 +155,53 @@ class SettingsTest extends TestCase
         $this->assertTrue($settings->hasErrors('canonicalUrlSource'));
     }
 
+    public function testSitemapTrailingSlashDefaultsToAuto(): void
+    {
+        $settings = new Settings();
+
+        $this->assertSame('auto', $settings->sitemapTrailingSlash);
+    }
+
+    public function testAutoSitemapTrailingSlashPassesValidation(): void
+    {
+        $settings = new Settings();
+        $settings->sitemapTrailingSlash = 'auto';
+
+        $settings->validate(['sitemapTrailingSlash']);
+
+        $this->assertFalse($settings->hasErrors('sitemapTrailingSlash'));
+    }
+
+    public function testAlwaysSitemapTrailingSlashPassesValidation(): void
+    {
+        $settings = new Settings();
+        $settings->sitemapTrailingSlash = 'always';
+
+        $settings->validate(['sitemapTrailingSlash']);
+
+        $this->assertFalse($settings->hasErrors('sitemapTrailingSlash'));
+    }
+
+    public function testNeverSitemapTrailingSlashPassesValidation(): void
+    {
+        $settings = new Settings();
+        $settings->sitemapTrailingSlash = 'never';
+
+        $settings->validate(['sitemapTrailingSlash']);
+
+        $this->assertFalse($settings->hasErrors('sitemapTrailingSlash'));
+    }
+
+    public function testUnrecognizedSitemapTrailingSlashFailsValidation(): void
+    {
+        $settings = new Settings();
+        $settings->sitemapTrailingSlash = 'something-else';
+
+        $settings->validate(['sitemapTrailingSlash']);
+
+        $this->assertTrue($settings->hasErrors('sitemapTrailingSlash'));
+    }
+
     public function testWebhookSecretDefaultsToEmptyString(): void
     {
         $settings = new Settings();

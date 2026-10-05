@@ -77,6 +77,39 @@ class CanonicalUrlResolverTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function testSitemapSourceLeavesLocUnchangedWhenTrailingSlashModeNotProvided(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([
+            new Response(200, [], json_encode(['urlset' => [['type' => 'event', 'id' => 'abc123', 'loc' => 'https://example.com/events/e/some-event-abc123/']]])),
+        ]);
+
+        $result = CanonicalUrlResolver::resolve('sitemap', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', 'https://fallback.example.com/events/e/some-event-abc123');
+
+        $this->assertSame('https://example.com/events/e/some-event-abc123/', $result);
+    }
+
+    public function testSitemapSourceAppliesNeverTrailingSlashModeToLoc(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([
+            new Response(200, [], json_encode(['urlset' => [['type' => 'event', 'id' => 'abc123', 'loc' => 'https://example.com/events/e/some-event-abc123/']]])),
+        ]);
+
+        $result = CanonicalUrlResolver::resolve('sitemap', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', null, 'never', true);
+
+        $this->assertSame('https://example.com/events/e/some-event-abc123', $result);
+    }
+
+    public function testSitemapSourceAppliesAutoTrailingSlashModeFollowingCraftSetting(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([
+            new Response(200, [], json_encode(['urlset' => [['type' => 'event', 'id' => 'abc123', 'loc' => 'https://example.com/events/e/some-event-abc123/']]])),
+        ]);
+
+        $result = CanonicalUrlResolver::resolve('sitemap', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', null, 'auto', false);
+
+        $this->assertSame('https://example.com/events/e/some-event-abc123', $result);
+    }
+
     public function testSitemapSourceFallsBackToSsrCanonicalUrlOnNonContentApiExceptionThrowable(): void
     {
         $sitemapApi = new class extends SitemapApi {
@@ -91,5 +124,32 @@ class CanonicalUrlResolverTest extends TestCase
         $result = CanonicalUrlResolver::resolve('sitemap', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', 'https://fallback.example.com/events/e/some-event-abc123');
 
         $this->assertSame('https://fallback.example.com/events/e/some-event-abc123', $result);
+    }
+
+    public function testSsrSourceAppliesAlwaysTrailingSlashModeToSsrCanonicalUrl(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([]);
+
+        $result = CanonicalUrlResolver::resolve('ssr', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', 'https://example.com/events/e/some-event-abc123', 'always', false);
+
+        $this->assertSame('https://example.com/events/e/some-event-abc123/', $result);
+    }
+
+    public function testSsrSourceAppliesAutoTrailingSlashModeFollowingCraftSetting(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([]);
+
+        $result = CanonicalUrlResolver::resolve('ssr', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', 'https://example.com/events/e/some-event-abc123/', 'auto', false);
+
+        $this->assertSame('https://example.com/events/e/some-event-abc123', $result);
+    }
+
+    public function testSsrSourceLeavesMissingCanonicalUrlNullWhenFormatting(): void
+    {
+        $sitemapApi = $this->sitemapApiReturning([]);
+
+        $result = CanonicalUrlResolver::resolve('ssr', $sitemapApi, 'demo-hub', 'real-key', 'event', 'abc123', null, 'always', false);
+
+        $this->assertNull($result);
     }
 }

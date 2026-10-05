@@ -200,6 +200,19 @@
                 ],
             }) }}
 
+            {{ forms.selectField({
+                label: 'Sitemap URL trailing slash',
+                instructions: 'Controls whether URLs in the generated sitemap, and event/place canonical URLs, end with a slash. Auto follows Craft\'s addTrailingSlashesToUrls setting.',
+                id: 'sitemapTrailingSlash',
+                name: 'sitemapTrailingSlash',
+                value: settings.sitemapTrailingSlash,
+                options: [
+                    { label: 'Auto (follow site\'s trailing slash setting)', value: 'auto' },
+                    { label: 'Always add trailing slash', value: 'always' },
+                    { label: 'Never add trailing slash', value: 'never' },
+                ],
+            }) }}
+
             {{ forms.textField({
                 label: 'Webhook URL',
                 instructions: 'Configure this URL in the ITI Digital dashboard\'s webhook settings for this hub.',

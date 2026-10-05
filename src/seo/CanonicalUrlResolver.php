@@ -2,11 +2,18 @@
 
 namespace iti\craftitiplugin\seo;
 
+use iti\craftitiplugin\helpers\SitemapUrlFormatter;
 use iti\craftitiplugin\services\SitemapApi;
 use Yii;
 
 final class CanonicalUrlResolver
 {
+    /**
+     * Whichever source wins, the URL is run through the sitemap trailing-slash setting so
+     * canonical tags always match the sitemap's link format. $sitemapTrailingSlash left
+     * null skips formatting entirely - callers that don't have a settings value to pass
+     * get the raw URL back unchanged.
+     */
     public static function resolve(
         string $source,
         SitemapApi $sitemapApi,
@@ -15,6 +22,8 @@ final class CanonicalUrlResolver
         string $sitemapType,
         string $rawId,
         ?string $ssrCanonicalUrl,
+        ?string $sitemapTrailingSlash = null,
+        bool $addTrailingSlashesToUrls = false,
     ): ?string {
         if ($source === 'sitemap') {
             try {
@@ -28,10 +37,19 @@ final class CanonicalUrlResolver
             }
 
             if ($loc !== null) {
-                return $loc;
+                return self::format($loc, $sitemapTrailingSlash, $addTrailingSlashesToUrls);
             }
         }
 
-        return $ssrCanonicalUrl;
+        return self::format($ssrCanonicalUrl, $sitemapTrailingSlash, $addTrailingSlashesToUrls);
+    }
+
+    private static function format(?string $url, ?string $sitemapTrailingSlash, bool $addTrailingSlashesToUrls): ?string
+    {
+        if ($url === null || $url === '' || $sitemapTrailingSlash === null) {
+            return $url;
+        }
+
+        return SitemapUrlFormatter::applyTrailingSlash($url, $sitemapTrailingSlash, $addTrailingSlashesToUrls);
     }
 }
