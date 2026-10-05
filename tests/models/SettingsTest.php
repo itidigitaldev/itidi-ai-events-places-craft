@@ -14,7 +14,7 @@ class SettingsTest extends TestCase
         $this->assertSame('', $settings->hubname);
         $this->assertSame('', $settings->apiKey);
         $this->assertFalse($settings->isConnected);
-        $this->assertSame(['events' => false, 'places' => false, 'itineraries' => false], $settings->moduleStatus);
+        $this->assertSame(['events' => false, 'places' => false, 'itineraries' => false, 'tripPlanner' => false], $settings->moduleStatus);
         $this->assertFalse($settings->enableEvents);
         $this->assertFalse($settings->enablePlaces);
     }
@@ -372,5 +372,48 @@ class SettingsTest extends TestCase
         $settings->validate(['llmsDestinationName']);
 
         $this->assertTrue($settings->hasErrors('llmsDestinationName'));
+    }
+
+    public function testTripPlannerDefaults(): void
+    {
+        $settings = new Settings();
+
+        $this->assertFalse($settings->enableTripPlanner);
+        $this->assertSame('footer', $settings->tripPlannerPosition);
+        $this->assertSame('exclude', $settings->tripPlannerLoadingMode);
+        $this->assertSame([], $settings->tripPlannerPaths);
+    }
+
+    public function testTripPlannerPositionAndModeRanges(): void
+    {
+        $settings = new Settings();
+        $settings->tripPlannerPosition = 'sidebar';
+        $settings->tripPlannerLoadingMode = 'sometimes';
+
+        $settings->validate(['tripPlannerPosition', 'tripPlannerLoadingMode']);
+
+        $this->assertTrue($settings->hasErrors('tripPlannerPosition'));
+        $this->assertTrue($settings->hasErrors('tripPlannerLoadingMode'));
+    }
+
+    public function testTripPlannerAcceptsValidPositionAndMode(): void
+    {
+        $settings = new Settings();
+        $settings->tripPlannerPosition = 'bodyOpen';
+        $settings->tripPlannerLoadingMode = 'include';
+
+        $settings->validate(['tripPlannerPosition', 'tripPlannerLoadingMode']);
+
+        $this->assertFalse($settings->hasErrors());
+    }
+
+    public function testTripPlannerPathsAreNormalizedOnValidate(): void
+    {
+        $settings = new Settings();
+        $settings->tripPlannerPaths = ['https://site.com/contact/', '', '/blog/*', '/contact'];
+
+        $settings->validate(['tripPlannerPaths']);
+
+        $this->assertSame(['/contact', '/blog/*'], $settings->tripPlannerPaths);
     }
 }

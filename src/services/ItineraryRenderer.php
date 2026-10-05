@@ -84,6 +84,8 @@ final class ItineraryRenderer
 
     private function render(array $response, string $context): string
     {
+        Plugin::getInstance()->tripPlanner->markModuleContentRendered();
+
         $view = Craft::$app->getView();
 
         foreach ($response['assets']['css'] ?? [] as $href) {

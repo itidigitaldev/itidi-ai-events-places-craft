@@ -43,6 +43,7 @@ class ModuleStatusApi extends Component
             'events' => !empty($data['modules']['events']),
             'places' => !empty($data['modules']['places']),
             'itineraries' => !empty($data['modules']['itineraries']),
+            'tripPlanner' => !empty($data['modules']['travelBuddy']),
         ];
     }
 }

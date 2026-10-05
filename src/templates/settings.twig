@@ -119,6 +119,52 @@
                 <p class="light">{{ 'Itineraries: not available on this hub.' }}</p>
             {% endif %}
 
+            {% if settings.moduleStatus['tripPlanner'] ?? false %}
+                {{ forms.lightswitchField({
+                    label: 'Enable Trip Planner',
+                    instructions: 'Load the ITI Digital Trip Planner on site pages. It\'s left off pages that already show ITI content from this plugin.',
+                    id: 'enableTripPlanner',
+                    name: 'enableTripPlanner',
+                    on: settings.enableTripPlanner,
+                }) }}
+
+                {{ forms.selectField({
+                    label: 'Trip Planner position',
+                    id: 'tripPlannerPosition',
+                    name: 'tripPlannerPosition',
+                    value: settings.tripPlannerPosition,
+                    options: [
+                        { label: 'Before the closing </body> tag (footer)', value: 'footer' },
+                        { label: 'Right after the opening <body> tag', value: 'bodyOpen' },
+                    ],
+                    errors: settings.getErrors('tripPlannerPosition'),
+                }) }}
+
+                {{ forms.selectField({
+                    label: 'Where to load the Trip Planner',
+                    id: 'tripPlannerLoadingMode',
+                    name: 'tripPlannerLoadingMode',
+                    value: settings.tripPlannerLoadingMode,
+                    options: [
+                        { label: 'Everywhere except the paths below', value: 'exclude' },
+                        { label: 'Only on the paths below', value: 'include' },
+                    ],
+                    errors: settings.getErrors('tripPlannerLoadingMode'),
+                }) }}
+
+                {{ forms.textareaField({
+                    label: 'Trip Planner paths',
+                    instructions: 'One path per line, e.g. /contact or /blog/*. A trailing * also matches everything under that path. Full URLs are fine. With no paths, “Everywhere except” loads on every page and “Only on” loads nowhere.',
+                    id: 'tripPlannerPaths',
+                    name: 'tripPlannerPaths',
+                    value: settings.tripPlannerPaths|join("\n"),
+                    rows: 5,
+                    class: 'code',
+                }) }}
+            {% else %}
+                <p class="light">{{ 'Trip Planner: not available on this hub.' }}</p>
+            {% endif %}
+
             <hr>
             <h2>llms.txt</h2>
 

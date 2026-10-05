@@ -12,6 +12,7 @@ use craft\events\ExceptionEvent;
 use craft\events\PluginEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\TemplateEvent;
 use craft\services\Plugins;
 use craft\web\ErrorHandler;
 use craft\web\twig\variables\CraftVariable;
@@ -25,6 +26,7 @@ use iti\craftitiplugin\services\ItinerariesApi;
 use iti\craftitiplugin\services\ModuleStatusApi;
 use iti\craftitiplugin\services\PlacesApi;
 use iti\craftitiplugin\services\SitemapApi;
+use iti\craftitiplugin\tripplanner\TripPlannerService;
 use iti\craftitiplugin\variables\CraftItiVariable;
 use craft\helpers\ElementHelper;
 use craft\helpers\ProjectConfig as ProjectConfigHelper;
@@ -54,6 +56,7 @@ class Plugin extends BasePlugin
             'sitemapApi' => SitemapApi::class,
             'itinerariesApi' => ItinerariesApi::class,
             'llmsTxt' => LlmsTxtService::class,
+            'tripPlanner' => TripPlannerService::class,
         ]);
 
         Event::on(
@@ -79,6 +82,12 @@ class Plugin extends BasePlugin
                 }
             }
         );
+
+        if (Craft::$app->getRequest()->getIsSiteRequest()) {
+            Event::on(View::class, View::EVENT_AFTER_RENDER_PAGE_TEMPLATE, function(TemplateEvent $event) {
+                $this->tripPlanner->handleAfterRenderPageTemplate($event);
+            });
+        }
 
         Event::on(
             UrlManager::class,

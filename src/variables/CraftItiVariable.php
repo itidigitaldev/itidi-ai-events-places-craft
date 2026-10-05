@@ -97,6 +97,8 @@ class CraftItiVariable
             return ['html' => 'Places are disabled.', 'seo' => null];
         }
 
+        Plugin::getInstance()->tripPlanner->markModuleContentRendered();
+
         $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
 
         try {
@@ -189,6 +191,8 @@ class CraftItiVariable
             return 'Places are disabled.';
         }
 
+        Plugin::getInstance()->tripPlanner->markModuleContentRendered();
+
         $detailSuffix = $type === 'events' ? 'e/' : 'p/';
 
         $listingBaseUrl = $filters['listingBaseUrl'] ?? null;
@@ -278,6 +282,8 @@ class CraftItiVariable
         if ($settings->hubname === '') {
             return 'ITI Digital Hubname is missing. Please configure the plugin settings first.';
         }
+
+        Plugin::getInstance()->tripPlanner->markModuleContentRendered();
 
         $route = SubmissionFormRouteResolver::resolve($settings->hubname, $type);
 

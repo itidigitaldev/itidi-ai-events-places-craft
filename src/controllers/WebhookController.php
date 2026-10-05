@@ -136,6 +136,15 @@ class WebhookController extends Controller
             $settings->enableItineraries = $itinerariesAvailable;
         }
 
+        if (array_key_exists('travelBuddy', $modules)) {
+            // Unlike the content modules above, this only records whether the hub makes
+            // the module available - it never flips enableTripPlanner. The widget would
+            // go on every page the moment it's turned on, so only the admin does that
+            // (as in WP). shouldInject() already requires moduleStatus['tripPlanner'],
+            // so the widget still disappears if the hub drops the module later.
+            $settings->moduleStatus['tripPlanner'] = (bool) $modules['travelBuddy'];
+        }
+
         try {
             $saved = Craft::$app->getPlugins()->savePluginSettings(Plugin::getInstance(), $settings->toArray());
         } catch (NotSupportedException) {

@@ -26,12 +26,12 @@ class ModuleStatusApiTest extends TestCase
     public function testSuccessfulResponseReturnsModuleFlags(): void
     {
         $api = $this->apiWithMockedResponses([
-            new Response(200, [], json_encode(['modules' => ['events' => true, 'places' => false, 'itineraries' => true]])),
+            new Response(200, [], json_encode(['modules' => ['events' => true, 'places' => false, 'itineraries' => true, 'travelBuddy' => true]])),
         ]);
 
         $result = $api->fetchModuleStatus('demo-hub', 'real-key');
 
-        $this->assertSame(['events' => true, 'places' => false, 'itineraries' => true], $result);
+        $this->assertSame(['events' => true, 'places' => false, 'itineraries' => true, 'tripPlanner' => true], $result);
     }
 
     public function testMissingItinerariesFlagReportsUnavailable(): void
@@ -102,5 +102,23 @@ class ModuleStatusApiTest extends TestCase
         $this->expectExceptionMessage('Invalid Hubname or API Key.');
 
         $api->fetchModuleStatus('demo-hub', 'real-key');
+    }
+
+    public function testMissingTravelBuddyFlagReportsTripPlannerUnavailable(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['modules' => ['events' => true]])),
+        ]);
+
+        $this->assertFalse($api->fetchModuleStatus('demo-hub', 'real-key')['tripPlanner']);
+    }
+
+    public function testFalseTravelBuddyFlagReportsTripPlannerUnavailable(): void
+    {
+        $api = $this->apiWithMockedResponses([
+            new Response(200, [], json_encode(['modules' => ['events' => true, 'travelBuddy' => false]])),
+        ]);
+
+        $this->assertFalse($api->fetchModuleStatus('demo-hub', 'real-key')['tripPlanner']);
     }
 }

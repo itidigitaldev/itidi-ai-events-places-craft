@@ -77,6 +77,10 @@ class SettingsController extends Controller
             'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
             'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
             'llmsAppendToExisting' => $settings->llmsAppendToExisting,
+            'enableTripPlanner' => false,
+            'tripPlannerPosition' => $settings->tripPlannerPosition,
+            'tripPlannerLoadingMode' => $settings->tripPlannerLoadingMode,
+            'tripPlannerPaths' => $settings->tripPlannerPaths,
         ]);
 
         if (!$saved) {
@@ -141,7 +145,17 @@ class SettingsController extends Controller
             $settings->llmsPlacesEntryIds = (array) $this->request->getBodyParam('llmsPlacesEntryIds', []);
         }
 
-        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'sitemapTrailingSlash', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit', 'itineraryDefaultWidgetCode', 'itineraryListingEntryIds', 'itineraryDetailEntryIds', 'llmsDestinationName', 'llmsOrganizationName', 'llmsEventsEntryIds', 'llmsPlacesEntryIds'])) {
+        // Same rule as the itinerary and llms pickers: these inputs, including the enable
+        // switch, only exist on the form while the Trip Planner section is visible, so
+        // don't wipe any of them when it's hidden.
+        if (!empty($settings->moduleStatus['tripPlanner'])) {
+            $settings->enableTripPlanner = (bool) $this->request->getBodyParam('enableTripPlanner', false);
+            $settings->tripPlannerPosition = (string) $this->request->getBodyParam('tripPlannerPosition', 'footer');
+            $settings->tripPlannerLoadingMode = (string) $this->request->getBodyParam('tripPlannerLoadingMode', 'exclude');
+            $settings->tripPlannerPaths = (array) preg_split('/\r\n|\r|\n/', (string) $this->request->getBodyParam('tripPlannerPaths', ''));
+        }
+
+        if (!$settings->validate(['eventsListingUrl', 'placesListingUrl', 'canonicalUrlSource', 'sitemapTrailingSlash', 'singleEventRoute', 'singlePlaceRoute', 'eventListingLimit', 'placeListingLimit', 'itineraryDefaultWidgetCode', 'itineraryListingEntryIds', 'itineraryDetailEntryIds', 'llmsDestinationName', 'llmsOrganizationName', 'llmsEventsEntryIds', 'llmsPlacesEntryIds', 'tripPlannerPosition', 'tripPlannerLoadingMode', 'tripPlannerPaths'])) {
             return $this->asModelFailure($settings, 'Fix the errors below and try again.', 'settings');
         }
 
@@ -176,6 +190,10 @@ class SettingsController extends Controller
             'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
             'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
             'llmsAppendToExisting' => $settings->llmsAppendToExisting,
+            'enableTripPlanner' => $settings->enableTripPlanner,
+            'tripPlannerPosition' => $settings->tripPlannerPosition,
+            'tripPlannerLoadingMode' => $settings->tripPlannerLoadingMode,
+            'tripPlannerPaths' => $settings->tripPlannerPaths,
         ]);
 
         return $this->asSuccess('Settings saved.', redirect: 'settings/plugins/craft-iti-plugin');
@@ -191,7 +209,7 @@ class SettingsController extends Controller
             'hubname' => '',
             'apiKey' => '',
             'isConnected' => false,
-            'moduleStatus' => ['events' => false, 'places' => false, 'itineraries' => false],
+            'moduleStatus' => ['events' => false, 'places' => false, 'itineraries' => false, 'tripPlanner' => false],
             'enableEvents' => false,
             'enablePlaces' => false,
             'enableEventSubmissionForm' => false,
@@ -218,6 +236,10 @@ class SettingsController extends Controller
             'llmsEventsEntryIds' => $settings->llmsEventsEntryIds,
             'llmsPlacesEntryIds' => $settings->llmsPlacesEntryIds,
             'llmsAppendToExisting' => $settings->llmsAppendToExisting,
+            'enableTripPlanner' => false,
+            'tripPlannerPosition' => $settings->tripPlannerPosition,
+            'tripPlannerLoadingMode' => $settings->tripPlannerLoadingMode,
+            'tripPlannerPaths' => $settings->tripPlannerPaths,
         ]);
 
         return $this->asSuccess('Disconnected.', redirect: 'settings/plugins/craft-iti-plugin');

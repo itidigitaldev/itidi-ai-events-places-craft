@@ -4,13 +4,14 @@ namespace iti\craftitiplugin\models;
 
 use craft\base\Model;
 use craft\helpers\ElementHelper;
+use iti\craftitiplugin\tripplanner\TripPlannerRules;
 
 class Settings extends Model
 {
     public string $hubname = '';
     public string $apiKey = '';
     public bool $isConnected = false;
-    public array $moduleStatus = ['events' => false, 'places' => false, 'itineraries' => false];
+    public array $moduleStatus = ['events' => false, 'places' => false, 'itineraries' => false, 'tripPlanner' => false];
     public bool $enableEvents = false;
     public bool $enablePlaces = false;
     public bool $enableLegacyRedirects = false;
@@ -37,6 +38,10 @@ class Settings extends Model
     public array $llmsEventsEntryIds = [];
     public array $llmsPlacesEntryIds = [];
     public bool $llmsAppendToExisting = false;
+    public bool $enableTripPlanner = false;
+    public string $tripPlannerPosition = 'footer';
+    public string $tripPlannerLoadingMode = 'exclude';
+    public array $tripPlannerPaths = [];
 
     protected function defineRules(): array
     {
@@ -58,6 +63,9 @@ class Settings extends Model
             [['llmsDestinationName', 'llmsOrganizationName'], 'trim'],
             [['llmsDestinationName', 'llmsOrganizationName'], 'string', 'max' => 255],
             [['llmsEventsEntryIds', 'llmsPlacesEntryIds'], 'filter', 'filter' => fn($value): array => self::normalizeEntryIds($value), 'skipOnArray' => false],
+            [['tripPlannerPosition'], 'in', 'range' => ['footer', 'bodyOpen']],
+            [['tripPlannerLoadingMode'], 'in', 'range' => ['exclude', 'include']],
+            [['tripPlannerPaths'], 'filter', 'filter' => fn($value): array => TripPlannerRules::normalizePathList($value), 'skipOnArray' => false],
         ];
     }
 
