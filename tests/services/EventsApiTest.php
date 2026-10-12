@@ -51,6 +51,20 @@ class EventsApiTest extends TestCase
         $this->assertSame('/api/v2.0/demo-hub/events/ssr-detail', $history[0]['request']->getUri()->getPath());
     }
 
+    public function testFetchDetailSendsBaseUrlsSoSharedLinksAreAbsolute(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['html' => '<p>x</p>']))]));
+        $stack->push(Middleware::history($history));
+        $api = new EventsApi(['httpClient' => new Client(['handler' => $stack])]);
+
+        $api->fetchDetail('demo-hub', 'real-key', '7', 'https://example.com/events', 'https://example.com/events/e/');
+
+        parse_str($history[0]['request']->getUri()->getQuery(), $query);
+        $this->assertSame('https://example.com/events', $query['listingBaseUrl']);
+        $this->assertSame('https://example.com/events/e/', $query['detailBaseUrl']);
+    }
+
     public function testNotFoundStatusCodeIs410(): void
     {
         $stack = HandlerStack::create(new MockHandler([new Response(500, [], 'error')]));

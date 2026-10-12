@@ -65,9 +65,19 @@ abstract class AbstractContentApi extends Component
      * the hub answers with a non-2xx status: an expired/gone event still comes back with
      * fallback html worth rendering, just flagged as unavailable rather than thrown away.
      */
-    public function fetchDetail(string $hubname, string $resolvedApiKey, string $id): array
+    public function fetchDetail(string $hubname, string $resolvedApiKey, string $id, ?string $listingBaseUrl = null, ?string $detailBaseUrl = null): array
     {
         $queryArgs = ['id' => self::extractRawId($id), 'format' => 'fragment', 'assetMode' => 'external'];
+
+        // Without these the hub builds share/copy links as hub-relative paths
+        // (/<hub>/events/e/<id>) that 404 on the Craft site.
+        if ($listingBaseUrl !== null) {
+            $queryArgs['listingBaseUrl'] = $listingBaseUrl;
+        }
+
+        if ($detailBaseUrl !== null) {
+            $queryArgs['detailBaseUrl'] = $detailBaseUrl;
+        }
 
         try {
             $response = $this->sendRequest($hubname, $resolvedApiKey, $this->typeSegment() . '/ssr-detail', $queryArgs, throwOnError: false);

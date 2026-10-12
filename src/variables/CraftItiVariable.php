@@ -102,7 +102,15 @@ class CraftItiVariable
         $api = $type === 'events' ? Plugin::getInstance()->eventsApi : Plugin::getInstance()->placesApi;
 
         try {
-            $response = $api->fetchDetail($settings->hubname, $settings->apiKey, $id);
+            // The detail page lives at <listing>/e/<id> (or /p/<id>); derive the listing
+            // and detail bases from the current URL by dropping that trailing segment pair.
+            $detailSuffix = $type === 'events' ? 'e' : 'p';
+            $currentUrl = UrlHelper::stripQueryString(Craft::$app->getRequest()->getAbsoluteUrl());
+            $listingBaseUrl = preg_replace('#/' . $detailSuffix . '/[^/]+/?$#', '', $currentUrl);
+            // The hub expects the detail base to end in "/e/" or "/p/", trailing slash included.
+            $detailBaseUrl = $listingBaseUrl . '/' . $detailSuffix . '/';
+
+            $response = $api->fetchDetail($settings->hubname, $settings->apiKey, $id, $listingBaseUrl, $detailBaseUrl);
         } catch (ContentNotFoundException $e) {
             Craft::$app->getResponse()->setStatusCode($e->statusCode);
 
