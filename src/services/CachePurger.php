@@ -3,6 +3,7 @@
 namespace iti\craftitiplugin\services;
 
 use Craft;
+use nystudio107\seomatic\Seomatic;
 use putyourlightson\blitz\Blitz;
 
 final class CachePurger
@@ -62,6 +63,10 @@ final class CachePurger
 
     public static function purgeUrls(array $urls): void
     {
+        // Before the empty check: a purge with no resolvable URLs (listing scope on a
+        // site with no configured listing page) must still refresh the head tags.
+        self::purgeSeomaticMeta();
+
         if (empty($urls)) {
             return;
         }
@@ -71,5 +76,21 @@ final class CachePurger
         }
 
         Blitz::$plugin->refreshCache->refreshCachedUrls($urls);
+    }
+
+    /**
+     * SEOmatic caches each page's head tags (canonical, title, description, OG) by URI.
+     * Without this, a title or description changed at the hub keeps showing the old
+     * tags - or the empty ones cached during a hub outage - until that cache expires.
+     * All of it is invalidated rather than per URL: a detail page can live under any
+     * listing path and the webhook can't know which, and the tag bump is cheap.
+     */
+    private static function purgeSeomaticMeta(): void
+    {
+        if (!class_exists(Seomatic::class) || !Craft::$app->getPlugins()->isPluginEnabled('seomatic')) {
+            return;
+        }
+
+        Seomatic::$plugin->metaContainers->invalidateCaches();
     }
 }

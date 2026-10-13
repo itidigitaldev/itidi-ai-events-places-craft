@@ -7,6 +7,7 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use iti\craftitiplugin\errors\ContentApiException;
 use iti\craftitiplugin\errors\ContentNotFoundException;
+use iti\craftitiplugin\helpers\ListingRequest;
 use iti\craftitiplugin\helpers\SsrHtmlSanitizer;
 use iti\craftitiplugin\helpers\SubmissionFormRouteResolver;
 use iti\craftitiplugin\Plugin;
@@ -201,18 +202,19 @@ class CraftItiVariable
 
         Plugin::getInstance()->tripPlanner->markModuleContentRendered();
 
-        $detailSuffix = $type === 'events' ? 'e/' : 'p/';
-
         $listingBaseUrl = $filters['listingBaseUrl'] ?? null;
         $detailBaseUrl = $filters['detailBaseUrl'] ?? null;
 
         if ($listingBaseUrl === null || $detailBaseUrl === null) {
-            $currentUrl = Craft::$app->getRequest()->getAbsoluteUrl();
-            $listingBaseUrl ??= $currentUrl;
-            $detailBaseUrl ??= rtrim($currentUrl, '/') . '/' . $detailSuffix;
+            [$defaultListingBaseUrl, $defaultDetailBaseUrl] = ListingRequest::baseUrls(
+                Craft::$app->getRequest()->getAbsoluteUrl(),
+                $type === 'events' ? 'e' : 'p',
+            );
+            $listingBaseUrl ??= $defaultListingBaseUrl;
+            $detailBaseUrl ??= $defaultDetailBaseUrl;
         }
 
-        $page = $filters['page'] ?? 1;
+        $page = $filters['page'] ?? ListingRequest::pageNumber(Craft::$app->getRequest()->getQueryParam('page_no'));
 
         $filters['limit'] ??= $type === 'events' ? $settings->eventListingLimit : $settings->placeListingLimit;
 
