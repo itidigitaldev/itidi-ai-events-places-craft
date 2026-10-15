@@ -40,7 +40,7 @@ Tourism content is rendered server-side so search engines and AI crawlers see re
 From the Craft Plugin Store, search for "ITI Digital AI-Ready Events & Places", or with Composer:
 
 ```bash
-composer require iti/craft-iti-plugin
+composer require itidigitaldev/itidi-ai-events-places-craft
 php craft plugin/install craft-iti-plugin
 ```
 
