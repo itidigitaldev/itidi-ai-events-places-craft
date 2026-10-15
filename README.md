@@ -19,6 +19,16 @@ Tourism content is rendered server-side so search engines and AI crawlers see re
 - `dataLayer` analytics events on detail pages
 - Optional Craft search integration
 
+## Screenshots
+
+| Events listing | Event detail |
+| --- | --- |
+| ![Events listing](screenshots/events-listing.png) | ![Event detail](screenshots/event-detail.png) |
+
+| Places listing |
+| --- |
+| ![Places listing](screenshots/places-listing.png) |
+
 ## Requirements
 
 - Craft CMS 5.9.0 or later
@@ -66,6 +76,38 @@ Run it as the web server's user so the file stays writable by PHP.
 ## Webhook
 
 Configure the webhook URL and secret shown in the plugin settings in your ITI Digital hub. Content, itinerary and module-status changes then purge the relevant caches immediately.
+
+## Important notes
+
+- Detail URLs live under `/e/` and `/p/` relative to the listing page. Avoid creating entries with those reserved path segments beneath a listing page, as they would conflict with dynamic detail URLs.
+- The default detail templates are full pages. Internal layout pages are not meant to be public landing pages.
+- Cache `/llms.txt`, the sitemap and detail routes sensibly at your host or CDN; the webhook purges them when content changes.
+
+## FAQ
+
+**What does this plugin require?**
+An active ITI Digital hub with a valid API key. It depends on ITI Digital API responses and does not work without one.
+
+**Why are some settings hidden?**
+The plugin checks your hub and only shows modules enabled for it.
+
+**How do I reset the connection?**
+Use the Disconnect button on the settings page. It clears the saved hub connection and returns the plugin to first-time setup.
+
+**Does the plugin add structured data?**
+Yes. Detail pages output ITI Digital's schema, canonical URL and Open Graph data, and it works alongside SEOmatic.
+
+**Can I use more than one listing page?**
+Yes. Pick as many listing entries as you need; detail URLs resolve relative to the page they are opened from.
+
+**Does it support cache-invalidation webhooks?**
+Yes. Point the ITI Digital hub at the webhook URL and secret shown in settings; Event, Place and Itinerary changes refresh listings and purge cached detail pages.
+
+**Why is my canonical URL different from what I expect?**
+Check the canonical URL source and sitemap trailing-slash options in settings.
+
+**Can I customize the detail templates?**
+Yes. Place your own template at the same relative path under your site's `templates/` directory.
 
 ## Development
 
