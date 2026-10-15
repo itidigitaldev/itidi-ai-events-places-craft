@@ -15,11 +15,11 @@
         "llms-txt"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/Stellites-WP-Dept/ITI-Craft-plugin",
+    "homepage": "https://github.com/itidigitaldev/itidi-ai-events-places-craft",
     "support": {
-        "docs": "https://github.com/Stellites-WP-Dept/ITI-Craft-plugin/blob/main/README.md",
-        "issues": "https://github.com/Stellites-WP-Dept/ITI-Craft-plugin/issues",
-        "source": "https://github.com/Stellites-WP-Dept/ITI-Craft-plugin"
+        "docs": "https://github.com/itidigitaldev/itidi-ai-events-places-craft/blob/main/README.md",
+        "issues": "https://github.com/itidigitaldev/itidi-ai-events-places-craft/issues",
+        "source": "https://github.com/itidigitaldev/itidi-ai-events-places-craft"
     },
     "authors": [
         {
@@ -53,8 +53,8 @@
         "handle": "craft-iti-plugin",
         "developer": "ITI Digital",
         "developerUrl": "https://iti-digital.com",
-        "documentationUrl": "https://github.com/Stellites-WP-Dept/ITI-Craft-plugin/blob/main/README.md",
-        "changelogUrl": "https://raw.githubusercontent.com/Stellites-WP-Dept/ITI-Craft-plugin/main/CHANGELOG.md",
+        "documentationUrl": "https://github.com/itidigitaldev/itidi-ai-events-places-craft/blob/main/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/itidigitaldev/itidi-ai-events-places-craft/main/CHANGELOG.md",
         "description": "AI-ready Events, Places and Itineraries from your ITI Digital hub, rendered server-side with clean URLs, structured data, sitemap and llms.txt."
     },
     "config": {

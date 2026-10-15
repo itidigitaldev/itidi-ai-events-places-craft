@@ -118,7 +118,7 @@ vendor/bin/phpunit
 
 ## Support
 
-- Issues: https://github.com/Stellites-WP-Dept/ITI-Craft-plugin/issues
+- Issues: https://github.com/itidigitaldev/itidi-ai-events-places-craft/issues
 - ITI Digital: https://iti-digital.com
 
 ## License
