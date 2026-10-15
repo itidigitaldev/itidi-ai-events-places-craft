@@ -25,9 +25,9 @@ Tourism content is rendered server-side so search engines and AI crawlers see re
 | --- | --- |
 | ![Events listing](screenshots/events-listing.png) | ![Event detail](screenshots/event-detail.png) |
 
-| Places listing |
-| --- |
-| ![Places listing](screenshots/places-listing.png) |
+| Places listing | Plugin settings |
+| --- | --- |
+| ![Places listing](screenshots/places-listing.png) | ![Plugin settings](screenshots/settings.png) |
 
 ## Requirements
 
