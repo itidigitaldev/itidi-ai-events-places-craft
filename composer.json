@@ -1,5 +1,5 @@
 {
-    "name": "itidigitaldev/itidi-ai-events-places-craft",
+    "name": "iti-digital/itidi-ai-events-places-craft",
     "description": "Server-side rendered, SEO-friendly Events, Places and Itineraries from the ITI Digital platform for Craft CMS, with clean URLs, structured data, sitemap, llms.txt and Trip Planner.",
     "type": "craft-plugin",
     "keywords": [
