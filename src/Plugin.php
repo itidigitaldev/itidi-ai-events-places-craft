@@ -37,7 +37,7 @@ use yii\base\Event;
 use yii\web\HttpException;
 
 /**
- * Craft ITI Plugin
+ * ITI Digital AI-Ready Events & Places
  *
  * @method static Plugin getInstance()
  */

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="pin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c04bff"/>
+      <stop offset="1" stop-color="#5b1fd6"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#pin)" d="M50 6C32.3 6 18 20.1 18 37.5 18 60 50 94 50 94s32-34 32-56.5C82 20.1 67.7 6 50 6Z"/>
+  <circle cx="50" cy="38" r="17" fill="#fff"/>
+  <path fill="none" stroke="#5b1fd6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M42 38h5l3-7 4 14 3-7h4"/>
+</svg>
